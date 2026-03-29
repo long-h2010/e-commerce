@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  postgresdb:
+    image: 'postgres:15'
+    container_name: 'postgres-server'
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=e-commerce
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./tmp/postgres/data:/var/lib/postgresql/data
+    networks:
+      - network
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  backend:
+    image: 'e-commerce-api'
+    container_name: 'api-server'
+    build:
+      context: .
+    restart: always
+    volumes:
+      - ./migrations:/app/migrations:z
+      - ./migrations/versions:/app/migrations/versions:z
+    ports:
+      - '8000:8000'
+    networks:
+      - network
+      - default
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    env_file:
+      - .env
+
+networks:
+  network:
+    driver: bridge

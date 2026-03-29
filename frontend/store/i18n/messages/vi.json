@@ -1,0 +1,22 @@
+{
+  "auth": {
+    "login": "Dăng nhập",
+    "register": "Đăng ký",
+    "full_name": "Họ và tên",
+    "phone": "Số điện thoại",
+    "username": "Email hoặc số điện thoại",
+    "password": "Mật khẩu",
+    "confirm_password": "Xác nhận mật khẩu",
+    "forgot_password": "Quên mật khẩu?",
+    "remember_me": "Ghi nhớ tôi",
+    "send_otp": "Gửi OTP",
+    "otp_code": "Mã OTP",
+    "or": "Hoặc",
+    "google_login": "Đăng nhập với Google"
+  },
+
+  "Home": {
+    "title": "Chào mừng đến với trang web của tôi",
+    "welcome": "Xin chào {name}!"
+  }
+}

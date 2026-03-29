@@ -1,0 +1,122 @@
+{
+  "header": {
+    "home": "Home",
+    "categories": {
+      "category_1": "Men",
+      "category_2": "Women",
+      "category_3": "Accessories"
+    }
+  },
+
+  "footer": {
+    "title": "Minimalist fashion, natural materials — designed in Vietnam.",
+    "columns": {
+      "1": {
+        "title": "Product",
+        "items": { "1": "Men", "2": "Women", "3": "Accessories" }
+      },
+      "2": {
+        "title": "Support",
+        "items": { "1": "Size chart", "2": "Returns and exchanges", "3": "Shipping", "4": "Contact us" }
+      },
+      "3": {
+        "title": "Brand",
+        "items": { "1": "Size chart", "2": "About us", "3": "Career", "4": "Blog" }
+      }
+    },
+    "sign": "© 2026 CLOTHES Fashion.",
+    "payments": {
+      "1": "Visa",
+      "2": "Momo",
+      "3": "Zalo Pay",
+      "4": "COD"
+    }
+  },
+
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "full_name": "Full name",
+    "phone_number": "Phone number",
+    "password": "Password",
+    "confirm_password": "Confirm password",
+    "forgot_password": "Forgot password?",
+    "remember_me": "Remember me",
+    "send_otp": "Send OTP",
+    "otp_code": "OTP code",
+    "or": "Or",
+    "google_login": "Login with Google"
+  },
+
+  "home": {
+    "welcome": "Welcome to Fashsion Store",
+    "title": "Bringing You Closer to Fashion That Inspires Confidence Every Day",
+    "benefits": {
+      "1": "Vietnamese brand",
+      "2": "Free shiping",
+      "3": "7-days returns",
+      "4": "Natural materials",
+      "5": "Secure payment"
+    }
+  },
+
+  "newsletter": {
+    "title": "Sign up now",
+    "offer": "Get exclusive offers just for you!",
+    "gift": "Get a 10% discount code for your first order.",
+    "email": "Enter your email",
+    "send": "Sign up"
+  },
+
+  "perk": {
+    "free_shipping": "Free shipping",
+    "returns": "7-days return",
+    "quality": "Quality assurance"
+  },
+
+  "product": {
+    "category": {
+      "men": "Men clothing",
+      "women": "Women clothing",
+      "accessory": "Accessories"
+    },
+    "items": "{amount} items",
+    "purchases": "purchases",
+    "reviews": "reviews",
+    "color": "color",
+    "size": "size",
+    "add_to_cart": "Add to cart",
+    "add_to_fav": "Add to favorites",
+    "description": "description",
+    "material_and_care": "materials & care",
+    "shipping_and_returns": {
+      "title": "shipping & returns",
+      "conditions": "Delivery within 7 days.\n Free shipping for orders over 1,000,000 VND.\n Free returns within 7 days of receiving the goods."
+    },
+    "customer_reviews": "Customer reviews",
+    "share_your_review": "Share your review",
+    "write_your_review": "Write your review",
+    "see_more": "See more",
+    "your_rating": "Your rating",
+    "your_review": "Your review"
+  },
+
+  "cart": {
+    "title": "Your shopping cart",
+    "empty": "Your cart is empty.",
+    "cart_summary": "Cart summary",
+    "stock_status": {
+      "in_stock": "In Stock",
+      "out_of_stock": "Out of Stock"
+    },
+    "subtotal": "Subtotal ({count} items)",
+    "discount": "Discount",
+    "enter_coupon": "Enter coupon code",
+    "apply": "Apply",
+    "shipping_estimate": "Shipping estimate",
+    "total": "Total",
+    "add_to_fav": "Add to favorites",
+    "remove": "Remove",
+    "checkout": "Proceed to checkout"
+  }
+}
