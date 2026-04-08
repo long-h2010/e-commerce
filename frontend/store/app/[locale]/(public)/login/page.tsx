@@ -16,6 +16,7 @@ import { useState } from 'react';
 type Tab = 'login' | 'register';
 
 interface FormState {
+  username: string;
   phoneNumber: string;
   password: string;
   confirmPassword: string;
@@ -27,6 +28,7 @@ export default function Login() {
   const { login } = useAuth();
   const [tab, setTab] = useState<Tab>('login');
   const [form, setForm] = useState<FormState>({
+    username: '',
     phoneNumber: '',
     password: '',
     confirmPassword: '',
@@ -41,10 +43,10 @@ export default function Login() {
         <div className='flex flex-col gap-3.5'>
           <Input
             className='!py-2'
-            placeholder={t('phone_number')}
+            placeholder={t('username')}
             prefix={<UserOutlined />}
-            value={form.phoneNumber}
-            onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
+            value={form.username}
+            onChange={(e) => setForm({ ...form, username: e.target.value })}
           />
           <Input
             className='!py-2'
@@ -61,6 +63,11 @@ export default function Login() {
       label: t('register'),
       children: (
         <div className='flex flex-col gap-3.5'>
+          <Input
+            className='!py-2'
+            placeholder={t('username')}
+            prefix={<UserOutlined />}
+          />
           <Input
             className='!py-2'
             placeholder={t('full_name')}
@@ -128,7 +135,7 @@ export default function Login() {
           onClick={() => {
             if (tab == 'login')
               return login({
-                phoneNumber: form.phoneNumber,
+                username: form.username,
                 password: form.password,
               });
           }}

@@ -4,7 +4,7 @@ export type ProductBase = {
   thumbnail: string;
   price: number;
   salePrice?: number;
-  status?: 'New' | 'Sale';
+  badge?: 'New' | 'Sale';
   purchases: number;
   rating: number;
 };
@@ -20,7 +20,7 @@ export type ProductDetail = ProductBase & {
   colors: Color[];
   sizes: string[]
   stock: number;
-  totalReview: number;
+  totalReviews: number;
 };
 
 export type ProductCart = {

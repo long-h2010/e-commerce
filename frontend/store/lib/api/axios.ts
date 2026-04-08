@@ -4,7 +4,12 @@ import { userService } from '@/services';
 import { authStore } from '@/stores';
 import axios from 'axios';
 
-const api = axios.create({
+export const apiNoAuth = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BE_URL,
+  withCredentials: true,
+});
+
+export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BE_URL,
   withCredentials: true,
 });
@@ -67,5 +72,3 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-export default api;

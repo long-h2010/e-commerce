@@ -7,7 +7,7 @@ import {
 import { Avatar, Badge } from 'antd';
 import Link from 'next/link';
 
-export const MainHeader = () => {
+export const Header = () => {
   return (
     <header className='flex w-full sticky top-0 px-16 items-center justify-between bg-white z-100'>
       <Logo />

@@ -7,11 +7,12 @@ export type User = {
 };
 
 export type UserSignIn = {
-  phoneNumber: string;
+  username: string;
   password: string;
 };
 
 export type UserSignUp = {
+  username: string;
   name: string;
   phoneNumber: string;
   password: string;

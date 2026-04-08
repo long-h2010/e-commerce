@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 export const ReviewSummnary = ({ summary }: { summary: RatingSummary }) => {
   const t = useTranslations('product');
-  const { average, totalReview, distribution } = summary;
+  const { average, totalReviews, distribution } = summary;
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
 
   return (
@@ -24,7 +24,7 @@ export const ReviewSummnary = ({ summary }: { summary: RatingSummary }) => {
             size='small'
           />
         </div>
-        <span>({`${totalReview} ${t('reviews')}`})</span>
+        <span>({`${totalReviews} ${t('reviews')}`})</span>
       </div>
       <div className='flex flex-col gap-3 p-2'>
         {Object.entries(distribution)
@@ -66,7 +66,7 @@ export const ReviewSummnary = ({ summary }: { summary: RatingSummary }) => {
               <p className='text-xs tracking-widest'>{t('your_review')}</p>
             }
           >
-            <Input.TextArea />
+            <Input.TextArea rows={5}/>
           </Form.Item>
         </Form>
       </Modal>

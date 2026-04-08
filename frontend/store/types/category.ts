@@ -1,4 +1,4 @@
-export const MainCategory = ['men', 'women', 'accessory'];
+export const MainCategory = ['men', 'women', 'accessories'];
 
 export type Category = {
   id: string;

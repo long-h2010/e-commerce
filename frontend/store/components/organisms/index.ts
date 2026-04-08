@@ -1,4 +1,5 @@
-export * from './MainHeader';
+export * from './Header';
+export * from './Sidebar';
 export * from './Footer';
 export * from './Banner';
 export * from './MarqueeStrip';

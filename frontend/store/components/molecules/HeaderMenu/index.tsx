@@ -2,18 +2,15 @@
 
 import { Menu, MenuProps } from 'antd';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
 export const HeaderMenu = () => {
   const t = useTranslations('header');
-  const [currentTab, setCurrentTab] = useState('home');
-
-  const onSelectTab: MenuProps['onClick'] = useCallback(
-    (e: any) => setCurrentTab(e.key),
-    [],
-  );
+  const pathname = usePathname();
 
   const category = useMemo<Record<string, string>>(() => {
     const raw = t.raw('categories');
@@ -23,8 +20,18 @@ export const HeaderMenu = () => {
   const tabs = useMemo<MenuItem[]>(
     () =>
       Object.entries(category).map(([key, label]) => ({
-        key,
-        label: typeof label === 'string' ? label : key,
+        key: label.toLowerCase(),
+        label:
+          typeof label === 'string' ? (
+            <Link
+              href={`/products/category/${label.toLowerCase()}`}
+              className='capitalize'
+            >
+              {label}
+            </Link>
+          ) : (
+            key
+          ),
       })),
     [category],
   );
@@ -32,7 +39,11 @@ export const HeaderMenu = () => {
   const headerItems: MenuItem[] = useMemo(
     () => [
       {
-        label: t('home'),
+        label: (
+          <Link href='/' className='capitalize'>
+            {t('home')}
+          </Link>
+        ),
         key: 'home',
       },
       ...tabs,
@@ -40,12 +51,18 @@ export const HeaderMenu = () => {
     [tabs, t],
   );
 
+  const selectedKey = useMemo(() => {
+    if (pathname === '/') return 'home';
+
+    const match = pathname.match(/\/products\/category\/([^/]+)/);
+    return match ? match[1] : '';
+  }, [pathname]);
+
   return (
     <Menu
       className='min-w-[320px]'
       mode='horizontal'
-      selectedKeys={[currentTab]}
-      onClick={onSelectTab}
+      selectedKeys={[selectedKey]}
       items={headerItems}
     />
   );

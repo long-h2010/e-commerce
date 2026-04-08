@@ -11,7 +11,7 @@ export type Review = {
 export type RatingSummary = {
   id: string;
   average: number;
-  totalReview: number;
+  totalReviews: number;
   distribution: {
     5: number;
     4: number;

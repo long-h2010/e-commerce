@@ -4,7 +4,7 @@ import { CartSummary } from '@/components/molecules';
 import { CartList } from '@/components/organisms';
 import { MainTemplate } from '@/components/templates';
 import { ProductCart } from '@/types';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export default function Cart() {
   const [items, setItems] = useState<ProductCart[]>([

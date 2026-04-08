@@ -18,7 +18,7 @@ export default function Home() {
   const categories: Category[] = [
     { id: '123123', category: 'men', totalProducts: 256 },
     { id: '464566', category: 'women', totalProducts: 256 },
-    { id: '234673', category: 'accessory', totalProducts: 256 },
+    { id: '234673', category: 'accessories', totalProducts: 256 },
   ];
 
   const products: ProductBase[] = [
@@ -27,7 +27,7 @@ export default function Home() {
       name: 'T-shirt Y2K',
       thumbnail: '/images/categories/men.png',
       price: 10000,
-      status: 'New',
+      badge: 'New',
       salePrice: 100000,
       rating: 2,
       purchases: 12365,

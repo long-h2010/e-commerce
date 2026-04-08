@@ -27,13 +27,13 @@ export default function Product() {
     rating: 4,
     purchases: 12365,
     stock: 10,
-    totalReview: 120,
+    totalReviews: 120,
   };
 
   const ratingSummary = {
     id: '12313',
     average: 4.5,
-    totalReview: 1230,
+    totalReviews: 1230,
     distribution: {
       5: 80,
       4: 10,

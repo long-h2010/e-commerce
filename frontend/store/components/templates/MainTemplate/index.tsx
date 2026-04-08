@@ -1,10 +1,19 @@
-import { Footer, MainHeader } from '@/components/organisms';
+import { Footer, Header, Sidebar } from '@/components/organisms';
 
-export const MainTemplate = ({ children }: { children: React.ReactNode }) => {
+export const MainTemplate = ({
+  children,
+  sidebar = false,
+}: {
+  children: React.ReactNode;
+  sidebar?: boolean;
+}) => {
   return (
     <>
-      <MainHeader />
-      <div className='px-16'>{children}</div>
+      <Header />
+      <div className={`${sidebar ? 'flex' : 'px-16'}`}>
+        {sidebar && <Sidebar />}
+        {children}
+      </div>
       <Footer />
     </>
   );

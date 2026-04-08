@@ -23,7 +23,7 @@ export const ProductInfor = ({ product }: { product: ProductDetail }) => {
     sizes,
     salePrice,
     rating,
-    totalReview,
+    totalReviews,
     description,
   } = product;
   const t = useTranslations('product');
@@ -57,7 +57,7 @@ export const ProductInfor = ({ product }: { product: ProductDetail }) => {
             <StarFilled style={{ color: '#f4a261' }} />
             <span className='mx-1'>•</span>
             <a href='#reviews' className='italic underline'>
-              {totalReview + ' ' + t('reviews')}
+              {totalReviews + ' ' + t('reviews')}
             </a>
           </span>
         </div>

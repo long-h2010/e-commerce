@@ -1,11 +1,35 @@
 {
   "header": {
-    "home": "Home",
+    "home": "home",
     "categories": {
-      "category_1": "Men",
-      "category_2": "Women",
-      "category_3": "Accessories"
+      "category_1": "men",
+      "category_2": "women",
+      "category_3": "accessories"
     }
+  },
+
+  "sidebar": {
+    "all_products": "All products",
+    "tops": "Tops",
+    "tops_items": {
+      "1": "T-shirt & Polo",
+      "2": "Shirts",
+      "3": "Sweater",
+      "4": "Jacket"
+    },
+    "bottoms": "Bottoms",
+    "bottoms_items": {
+      "1": "Pants",
+      "2": "Shorts",
+      "3": "Skirts"
+    },
+    "dresses": "Dresses",
+    "dresses_items": {
+      "1": "Casual",
+      "2": "Formal",
+      "3": "Party"
+    },
+    "accessories": "Accessories"
   },
 
   "footer": {
@@ -36,6 +60,7 @@
   "auth": {
     "login": "Login",
     "register": "Register",
+    "username": "Username",
     "full_name": "Full name",
     "phone_number": "Phone number",
     "password": "Password",
@@ -78,7 +103,7 @@
     "category": {
       "men": "Men clothing",
       "women": "Women clothing",
-      "accessory": "Accessories"
+      "accessories": "Accessories"
     },
     "items": "{amount} items",
     "purchases": "purchases",
