@@ -10,6 +10,7 @@ from app.core.enums.user_role import UserRole
 class User(BaseModel, table=True):
     __tablename__ = "users"
 
+    username: str
     email: Optional[str] = Field(default=None, unique=True, index=True)
     phone_number: Optional[str] = Field(default=None, unique=True, index=True)
     password: Optional[str]
