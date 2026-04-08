@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+.ant-menu-item,
+.ant-menu-submenu-title {
+  text-transform: capitalize;
+}
+
+.ant-upload-wrapper .ant-upload-select {
+  display: block;
+}
