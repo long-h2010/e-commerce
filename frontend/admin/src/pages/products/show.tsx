@@ -1,11 +1,29 @@
 import { ProductDetailTemplate } from '@/components/templates';
+import { useHeaderStore } from '@/stores';
 import { ProductDetail } from '@/types';
-import { useTable } from '@refinedev/antd';
-import { useParsed, useShow } from '@refinedev/core';
+import { useGo, useParsed, useResourceParams, useShow } from '@refinedev/core';
 import { Empty, Skeleton } from 'antd';
+import { useEffect } from 'react';
 
 export const ProductShow = () => {
   const { id } = useParsed();
+  const { setState, clearState } = useHeaderStore();
+  const go = useGo();
+  const { resource } = useResourceParams();
+
+  useEffect(() => {
+    setState('Edit', 'edit', () =>
+      go({
+        to: {
+          resource: resource?.name!,
+          action: 'edit',
+          id: id!,
+        },
+      }),
+    );
+    return () => clearState();
+  }, []);
+
   const {
     result: productData,
     query: { isLoading },
@@ -17,26 +35,9 @@ export const ProductShow = () => {
     },
   });
 
-  const { tableProps: variantsProps } = useTable({
-    resource: `${import.meta.env.VITE_PRODUCT_VARIANTS_ENDPOINT}/${id}`,
-    syncWithLocation: false,
-  });
-
-  const { tableProps: reviewsProps } = useTable({
-    resource: `${import.meta.env.VITE_PRODUCT_REVIEWS_ENDPOINT}/${id}`,
-    syncWithLocation: false,
-  });
-
   if (isLoading) return <Skeleton />;
 
   if (!productData) return <Empty />;
 
-  return (
-    <ProductDetailTemplate
-      action='show'
-      product={productData}
-      variants={variantsProps}
-      reviews={reviewsProps}
-    />
-  );
+  return <ProductDetailTemplate action='show' product={productData} />;
 };

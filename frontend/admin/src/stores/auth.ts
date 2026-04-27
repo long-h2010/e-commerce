@@ -14,7 +14,7 @@ interface AuthActions {
   clearAuth: () => void;
 }
 
-export const authStore = create<AuthState & AuthActions>()(
+export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     immer((set) => ({
       user: null,

@@ -1,5 +1,6 @@
-import { OverViewStats } from '@/components/organisms';
-import { formatNumberCount, formatVND } from '@/lib/utils';
+import { PageTemplate } from '@/components/templates';
+import { buildTreeData, formatNumberCount, formatVND } from '@/lib/utils';
+import { useHeaderStore } from '@/stores';
 import { ProductBase, ProductStatus, ProductStatusEnum } from '@/types';
 import { SearchOutlined } from '@ant-design/icons';
 import {
@@ -8,19 +9,19 @@ import {
   ShowButton,
   useTable,
 } from '@refinedev/antd';
-import { useCustom } from '@refinedev/core';
+import { useCustom, useGo, useList, useResourceParams } from '@refinedev/core';
 import {
   Card,
-  Divider,
   Image,
   Input,
-  Segmented,
   Select,
   Space,
+  Switch,
   Table,
   Tag,
+  TreeSelect,
 } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const statusOptions = [
   { label: 'All', value: '' },
@@ -30,6 +31,43 @@ const statusOptions = [
 ];
 
 export const ProductList = () => {
+  const { setState, clearState } = useHeaderStore();
+  const go = useGo();
+  const { resource } = useResourceParams();
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const { result: categoriesResult } = useList({
+    resource: import.meta.env.VITE_CATEGORIES_ENDPOINT,
+  });
+
+  useEffect(() => {
+    if (!categoriesResult?.data) return;
+
+    setCategories([
+      { title: 'All', value: '' },
+      ...buildTreeData(
+        categoriesResult.data.map((item: any) => ({
+          id: item.id,
+          title: item.category,
+          value: item.id,
+          parentId: item.parentId,
+        })),
+      ),
+    ]);
+  }, [categoriesResult?.data]);
+
+  useEffect(() => {
+    setState('Create', 'plus', () =>
+      go({
+        to: {
+          resource: resource?.name!,
+          action: 'create',
+        },
+      }),
+    );
+    return () => clearState();
+  }, []);
+
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [statusFilter, setStatusFilter] = useState<ProductStatus | undefined>(
     undefined,
@@ -55,71 +93,67 @@ export const ProductList = () => {
   ];
 
   const { tableProps, setFilters } = useTable<ProductBase>({
-    resource: 'products/list',
     filters: {
       permanent: [],
     },
     syncWithLocation: false,
   });
 
+  const handleSearch = (value: string) => {
+    setFilters(
+      [{ field: 'keyword', operator: 'contains', value: value }],
+      'replace',
+    );
+  };
+
   const handleStatusChange = (value: ProductStatus | undefined) => {
     setStatusFilter(value);
-
-    if (value) {
+    if (value)
       setFilters([{ field: 'status', operator: 'eq', value }], 'replace');
-    } else {
-      setFilters([], 'replace');
-    }
+    else setFilters([], 'replace');
+  };
+
+  const handleCategoryChange = (value: string) => {
+    if (value)
+      setFilters([{ field: 'categoryId', operator: 'eq', value }], 'replace');
+    else setFilters([], 'replace');
   };
 
   return (
-    <div className='flex flex-col gap-10'>
-      <OverViewStats stats={overview} />
-
+    <PageTemplate overview={overview}>
       <Card>
-        <div className='flex flex-col'>
-          <div className='flex flex-col gap-3'>
-            <span className='uppercase text-xs'>Filter by Category</span>
-            <Segmented
-              options={['All', 'Men', 'Women', 'Accessories']}
-              className='w-fit'
-            />
-            <Segmented
-              options={[
-                'All',
-                'Tops',
-                'Bottoms',
-                'Outerwear',
-                'Dresses',
-                'Accessories',
-                'Footwear',
-              ]}
-              className='w-fit'
+        <div className='flex justify-between gap-10'>
+          <Input
+            placeholder='Search by name'
+            prefix={<SearchOutlined />}
+            className='max-w-sm'
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+          <div className='flex items-center gap-3'>
+            <span className='uppercase text-xs'>Status: </span>
+            <Select
+              placeholder='Status'
+              options={statusOptions}
+              value={statusFilter}
+              onChange={handleStatusChange}
+              className='min-w-[120px]'
             />
           </div>
-          <Divider />
-          <div className='flex gap-10'>
-            <Input
-              placeholder='Search by name'
-              prefix={<SearchOutlined />}
-              className='max-w-sm'
+          <div className='flex items-center gap-3'>
+            <span className='uppercase text-xs'>Category: </span>
+            <TreeSelect
+              placeholder='Category'
+              treeData={categories}
+              className='min-w-[250px] capitalize!'
+              onChange={handleCategoryChange}
             />
-            <div className='flex items-center gap-3'>
-              <span className='uppercase text-xs'>Status: </span>
-              <Select
-                placeholder='Status'
-                options={statusOptions}
-                value={statusFilter}
-                onChange={handleStatusChange}
-                className='min-w-[120px]'
-              />
-            </div>
           </div>
         </div>
       </Card>
 
       <Table
         {...tableProps}
+        loading={tableProps.loading}
         rowSelection={{
           selectedRowKeys,
           onChange: (newSelectedRowKeys: React.Key[]) => {
@@ -160,6 +194,11 @@ export const ProductList = () => {
           )}
         />
         <Table.Column
+          dataIndex={'visible'}
+          title='Visible'
+          render={(value) => <Switch defaultChecked={value == 'public'} disabled />}
+        />
+        <Table.Column
           dataIndex={'purchases'}
           title='Purchases'
           sorter={{ multiple: 2 }}
@@ -167,13 +206,14 @@ export const ProductList = () => {
           render={(value) => formatNumberCount(value)}
         />
         <Table.Column
-          dataIndex={'rating'}
-          title='Rating'
+          dataIndex={'avgRating'}
+          title='Avg rating'
           sorter={{ multiple: 3 }}
           sortDirections={['ascend', 'descend']}
           render={(value) => value.toFixed(2)}
         />
         <Table.Column
+          align='center'
           render={(_, record) => (
             <Space>
               <EditButton hideText size='small' recordItemId={record.id} />
@@ -183,6 +223,6 @@ export const ProductList = () => {
           )}
         />
       </Table>
-    </div>
+    </PageTemplate>
   );
 };

@@ -1,5 +1,9 @@
 import { api } from '@/lib/api/axios';
-import { transformKeysToCamelCase } from '@/lib/utils';
+import {
+  camelToSnake,
+  transformKeysToCamelCase,
+  transformKeysToSnakeCase,
+} from '@/lib/utils';
 import { DataProvider } from '@refinedev/core';
 import { AxiosInstance } from 'axios';
 import { stringify } from 'query-string';
@@ -27,14 +31,10 @@ export const dataProvider = (
     filters.forEach((item) => {
       if ('field' in item && item.operator && item.value !== undefined) {
         const { field, operator, value } = item;
+        const f = camelToSnake(field);
 
-        if (operator == 'eq') queryParams[field] = value;
-        else if (operator == 'contains') queryParams[`${field}_like`] = value;
-        else if (operator == 'in')
-          queryParams[`${field}_in`] = Array.isArray(value)
-            ? value.join(',')
-            : value;
-        else queryParams[field] = value;
+        if (operator == 'eq') queryParams[f] = value;
+        else queryParams[f] = value;
       }
     });
 
@@ -43,7 +43,7 @@ export const dataProvider = (
 
       sorters.forEach((sorter) => {
         const prefix = sorter.order === 'desc' ? '-' : '';
-        sortArray.push(`${prefix}${sorter.field}`);
+        sortArray.push(`${prefix}${camelToSnake(sorter.field)}`);
       });
 
       queryParams.sort = sortArray.join(',');
@@ -59,7 +59,11 @@ export const dataProvider = (
 
     return {
       data: transformData.founds ?? transformData,
-      total: transformData.total ?? transformData.length ?? 0,
+      total:
+        transformData.total ??
+        transformData.length ??
+        transformData.searchOptions.totalCount ??
+        0,
     };
   },
 
@@ -74,16 +78,41 @@ export const dataProvider = (
   },
 
   create: async ({ resource, variables, meta }) => {
-    const { data } = await httpClient.post(`${apiUrl}/${resource}`, variables, {
-      headers: meta?.headers,
-    });
-    return { data: data.data || data };
+    try {
+      let bodyData = variables;
+      if (!(variables instanceof FormData))
+        bodyData = transformKeysToSnakeCase(variables);
+
+      const { data } = await httpClient.post(
+        `${apiUrl}/${resource}`,
+        bodyData,
+        {
+          headers: meta?.headers,
+        },
+      );
+
+      return { data: data.data || data };
+    } catch (error: any) {
+      const res = error.response;
+      const message =
+        res?.data?.detail || res?.data?.message || 'Create failed';
+
+      throw {
+        message,
+        statusCode: res?.status,
+        errors: res?.data,
+      };
+    }
   },
 
   update: async ({ resource, id, variables, meta }) => {
+    let bodyData = variables;
+    if (!(variables instanceof FormData))
+      bodyData = transformKeysToSnakeCase(variables);
+
     const { data } = await httpClient.put(
       `${apiUrl}/${resource}/${id}`,
-      variables,
+      bodyData,
       { headers: meta?.headers },
     );
     return { data: data.data || data };

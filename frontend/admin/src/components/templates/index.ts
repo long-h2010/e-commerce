@@ -1,1 +1,2 @@
-export * from './ProductDetailTemplate'
+export * from './PageTemplate';
+export * from './ProductDetailTemplate';

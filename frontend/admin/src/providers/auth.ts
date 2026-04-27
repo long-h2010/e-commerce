@@ -1,5 +1,5 @@
 import { authService } from '@/services';
-import { authStore } from '@/stores';
+import { useAuthStore } from '@/stores';
 import { AuthProvider } from '@refinedev/core';
 
 export const authProvider: AuthProvider = {
@@ -29,7 +29,7 @@ export const authProvider: AuthProvider = {
   },
 
   check: async () => {
-    const { accessToken, isAuthenticated } = authStore.getState();
+    const { accessToken, isAuthenticated } = useAuthStore.getState();
 
     if (accessToken || isAuthenticated) return { authenticated: true };
 
@@ -63,7 +63,7 @@ export const authProvider: AuthProvider = {
   },
 
   getPermissions: async () => {
-    const user = authStore.getState().user;
+    const user = useAuthStore.getState().user;
     return user?.role;
   },
 };

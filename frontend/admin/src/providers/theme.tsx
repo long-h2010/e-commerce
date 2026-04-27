@@ -1,4 +1,4 @@
-import { themeStore } from "@/stores";
+import { useThemeStore } from "@/stores";
 import { RefineThemes } from "@refinedev/antd";
 import { ConfigProvider, theme } from "antd";
 
@@ -7,7 +7,7 @@ export const AntdThemeProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { mode } = themeStore();
+  const { mode } = useThemeStore();
 
   return (
     <ConfigProvider

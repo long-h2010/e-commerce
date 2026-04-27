@@ -5,3 +5,7 @@ export * from './ProductHeader';
 export * from './ProductActivityLog';
 export * from './ProductSettings';
 export * from './ProductDetailTabs';
+export * from './ProductFooter';
+export * from './AddVariantDrawer';
+export * from './AddCategoryDrawer';
+export * from './AddDiscountDrawer';

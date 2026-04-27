@@ -1,21 +1,27 @@
 import {
   EditOutlined,
   MoonOutlined,
+  PlusOutlined,
   SaveOutlined,
   SunOutlined,
 } from '@ant-design/icons';
 import { Space, Button, Layout, theme, Breadcrumb } from 'antd';
-import { themeStore } from '@/stores';
+import { useHeaderStore, useThemeStore } from '@/stores';
 import { useBreadcrumb } from '@refinedev/core';
-import { useParams } from 'react-router';
+
+const ICON = {
+  plus: <PlusOutlined />,
+  save: <SaveOutlined />,
+  edit: <EditOutlined />,
+};
 
 export const Header = () => {
-  const { mode, setMode } = themeStore();
+  const { mode, setMode } = useThemeStore();
   const {
     token: { colorBgContainer, colorText },
   } = theme.useToken();
   const { breadcrumbs } = useBreadcrumb();
-  const params = useParams();
+  const { title, icon, onClick } = useHeaderStore();
 
   return (
     <Layout.Header
@@ -28,18 +34,6 @@ export const Header = () => {
       }}
     >
       <Space>
-        {/* {breadcrumbs.length > 1 && (
-          <>
-            <Button
-              type='text'
-              icon={<ArrowLeftOutlined />}
-              style={{ color: '#888' }}
-            >
-              Back
-            </Button>
-            <Divider type='vertical' />
-          </>
-        )} */}
         <Breadcrumb
           items={breadcrumbs.map((item) => ({
             title: (
@@ -58,26 +52,17 @@ export const Header = () => {
           padding: '1rem',
         }}
       >
-        {breadcrumbs.length > 1 &&
-          (breadcrumbs[1].label == 'Show' ||
-            breadcrumbs[1].label == 'Edit') && (
-            <Button
-              href={`/${breadcrumbs[0].label}/${
-                breadcrumbs[1].label == 'Show' ? 'edit' : 'show'
-              }/${params.id}`}
-              icon={
-                breadcrumbs[1].label == 'Show' ? (
-                  <EditOutlined />
-                ) : (
-                  <SaveOutlined />
-                )
-              }
-              color='primary'
-              variant='outlined'
-            >
-              {breadcrumbs[1].label == 'Show' ? 'Edit' : 'Save'}
-            </Button>
-          )}
+        {title && icon && (
+          <Button
+            icon={ICON[icon]}
+            color='primary'
+            variant='outlined'
+            onClick={onClick}
+          >
+            {title}
+          </Button>
+        )}
+
         <Button
           onClick={() => {
             setMode(mode === 'light' ? 'dark' : 'light');

@@ -1,14 +1,14 @@
 import { authService } from '@/services';
-import { authStore } from '@/stores';
+import { useAuthStore } from '@/stores';
 import axios from 'axios';
 
 export const apiNoAuth = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: `${import.meta.env.VITE_API_URL}/`,
   withCredentials: true,
 });
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: `${import.meta.env.VITE_API_URL}/`,
   withCredentials: true,
 });
 
@@ -27,7 +27,7 @@ const processQueue = (error: any = null) => {
 };
 
 api.interceptors.request.use((config) => {
-  const token = authStore.getState().accessToken;
+  const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -51,7 +51,7 @@ api.interceptors.response.use(
 
       try {
         const newToken = await authService.refreshToken();
-        authStore.setState({ accessToken: newToken });
+        useAuthStore.setState({ accessToken: newToken });
 
         processQueue();
 

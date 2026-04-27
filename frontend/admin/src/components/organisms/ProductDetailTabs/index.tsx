@@ -1,64 +1,74 @@
-import { Card, Table, Tabs } from 'antd';
+import { Card, Tabs } from 'antd';
 import type { TabsProps } from 'antd';
 import { ProductInfor } from '../ProductInfor';
 import { ProductInventory } from '../ProductInventory';
 import { InboxOutlined, StarFilled } from '@ant-design/icons';
 import { ProductReviews } from '../ProductReviews';
+import { memo } from 'react';
+import { Color } from '@/types';
 
-export const ProductDetailTabs = ({
-  description,
-  materials,
-  care,
-  variants,
-  reviews,
-}: {
-  description: string;
-  materials: string;
-  care: string;
-  variants: any;
-  reviews: any;
-}) => {
-  const colors = variants.dataSource?.map((v: any) => v.color);
-  const sizes = [...new Set(variants.dataSource?.map((v: any) => v.size))];
+export const ProductDetailTabs = memo(
+  ({
+    action,
+    description,
+    materials,
+    care,
+    colors,
+    sizes,
+  }: {
+    action: 'create' | 'edit' | 'show';
+    description?: string;
+    materials?: string;
+    care?: string;
+    colors?: Color[];
+    sizes?: string[];
+  }) => {
+    const tabsItems: TabsProps['items'] = [
+      {
+        key: 'detail',
+        label: 'Detail',
+        children: (
+          <ProductInfor
+            action={action}
+            {...{ description, materials, care, colors, sizes }}
+          />
+        ),
+      },
+    ];
 
-  const tabsItems: TabsProps['items'] = [
-    {
-      key: 'detail',
-      label: 'Detail',
-      children: (
-        <ProductInfor {...{ description, materials, care, colors, sizes }} />
-      ),
-    },
-    {
-      key: 'inventory',
-      label: (
-        <>
-          <InboxOutlined />
-          <span>Inventory</span>
-        </>
-      ),
-      children: <ProductInventory tableProps={variants} />,
-    },
-    {
-      key: 'pricing',
-      label: 'Pricing',
-      children: <></>,
-    },
-    {
-      key: 'review',
-      label: (
-        <>
-          <StarFilled style={{ color: 'orange' }} />
-          <span>Reviews</span>
-        </>
-      ),
-      children: <ProductReviews tableProps={reviews} />,
-    },
-  ];
+    if (action !== 'create')
+      tabsItems.push(
+        {
+          key: 'inventory',
+          label: (
+            <>
+              <InboxOutlined />
+              <span>Inventory</span>
+            </>
+          ),
+          children: <ProductInventory action={action} />,
+        },
+        {
+          key: 'pricing',
+          label: 'Pricing',
+          children: <></>,
+        },
+        {
+          key: 'review',
+          label: (
+            <>
+              <StarFilled style={{ color: 'orange' }} />
+              <span>Reviews</span>
+            </>
+          ),
+          children: <ProductReviews />,
+        },
+      );
 
-  return (
-    <Card>
-      <Tabs items={tabsItems} />
-    </Card>
-  );
-};
+    return (
+      <Card>
+        <Tabs items={tabsItems} />
+      </Card>
+    );
+  },
+);

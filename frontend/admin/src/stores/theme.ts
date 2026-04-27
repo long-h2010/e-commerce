@@ -9,7 +9,7 @@ interface ThemeState {
   toggleMode: () => void;
 }
 
-export const themeStore = create<ThemeState>()(
+export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       mode: 'dark',

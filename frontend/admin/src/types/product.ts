@@ -1,3 +1,5 @@
+import { BaseCategory } from './category';
+
 export type ProductStatus = 'active' | 'out of stock' | 'draft';
 
 export enum ProductStatusEnum {
@@ -11,13 +13,15 @@ export type ProductBase = {
   name: string;
   thumbnail: string;
   price: number;
+  saleValue: number;
   status: ProductStatus;
   purchases: number;
   stock: number;
-  rating: number;
+  avgRating: number;
 };
 
-type Color = {
+export type Color = {
+  id: string;
   name: string;
   hex: string;
 };
@@ -26,7 +30,16 @@ export type ProductImage = {
   id: string;
   url: string;
   isThumbnail: boolean;
-}
+};
+
+export type ProductVariant = {
+  id: string;
+  color: Color;
+  size: string;
+  cost: number;
+  price: number;
+  stock: number;
+};
 
 export type ProductDetail = ProductBase & {
   description: string;
@@ -38,18 +51,6 @@ export type ProductDetail = ProductBase & {
   stock: number;
   views: number;
   totalReviews: number;
-  categories: string[];
+  categories: BaseCategory[];
   createdAt: Date;
-};
-
-export type ProductCart = {
-  productId: string;
-  name: string;
-  thumbnail: string;
-  color: string;
-  size: string;
-  price: number;
-  salePrice?: number;
-  quantity: number;
-  stock: number;
 };

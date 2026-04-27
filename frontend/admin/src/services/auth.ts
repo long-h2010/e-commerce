@@ -1,5 +1,5 @@
 import { apiNoAuth } from '@/lib/api/axios';
-import { authStore } from '@/stores';
+import { useAuthStore } from '@/stores';
 import { User, UserSignIn } from '@/types';
 
 export const authService = {
@@ -12,7 +12,7 @@ export const authService = {
     });
 
     const { user, access_token: accessToken } = res.data;
-    authStore.getState().setAuth(user, accessToken);
+    useAuthStore.getState().setAuth(user, accessToken);
 
     return res.data;
   },
@@ -23,7 +23,7 @@ export const authService = {
     } catch (e) {
       console.error('Logout error: ', e);
     } finally {
-      authStore.getState().clearAuth();
+      useAuthStore.getState().clearAuth();
     }
   },
 
@@ -33,7 +33,8 @@ export const authService = {
     );
 
     const newAccessToken = res.data.access_token;
-    authStore.setState({ accessToken: newAccessToken });
+    console.log('New access token: ', newAccessToken);
+    useAuthStore.setState({ accessToken: newAccessToken });
 
     return newAccessToken;
   },

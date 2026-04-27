@@ -20,6 +20,9 @@ import {
   ProductShow,
 } from '@/pages/products';
 import Temp from '@/pages/temp';
+import { ColorList } from '@/pages/colors';
+import { OrderList, OrderShow } from '@/pages/orders';
+import { DiscountList } from '@/pages/discounts';
 
 export const AppRoutes = () => {
   return (
@@ -55,11 +58,24 @@ export const AppRoutes = () => {
           <Route path='edit/:id' element={<CategoryEdit />} />
         </Route>
 
+        <Route path={ResourceName.COLORS}>
+          <Route index element={<ColorList />} />
+        </Route>
+
         <Route path={ResourceName.PRODUCTS}>
           <Route index element={<ProductList />} />
           <Route path='create' element={<ProductCreate />} />
           <Route path='show/:id' element={<ProductShow />} />
           <Route path='edit/:id' element={<ProductEdit />} />
+        </Route>
+
+        <Route path={ResourceName.DISCOUNTS}>
+          <Route index element={<DiscountList />} />
+        </Route>
+
+        <Route path={ResourceName.ORDERS}>
+          <Route index element={<OrderList />} />
+          <Route path='show/:id' element={<OrderShow />} />
         </Route>
       </Route>
 

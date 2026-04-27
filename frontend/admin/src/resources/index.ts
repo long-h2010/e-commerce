@@ -3,10 +3,16 @@ import { dashboardResource } from './dashboard';
 import { usersResource } from './users';
 import { productResource } from './product';
 import { categoryResource } from './categories';
+import { colorResource } from './colors';
+import { orderResource } from './orders';
+import { discountResource } from './discount';
 
 export const resources: ResourceProps[] = [
   dashboardResource,
   usersResource,
   categoryResource,
-  productResource
+  colorResource,
+  productResource,
+  discountResource,
+  orderResource
 ];
