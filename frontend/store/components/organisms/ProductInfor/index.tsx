@@ -2,32 +2,124 @@
 
 import { Price } from '@/components/atoms';
 import { Accordions, Perks } from '@/components/molecules';
-import { formatNumberCount } from '@/lib/utils';
-import { ProductDetail } from '@/types';
+import { useCreate, useList } from '@/hooks';
+import { formatNumberCount, formatVND } from '@/lib/utils';
+import { Color, ProductDetail, ProductVariant } from '@/types';
 import {
+  CheckOutlined,
   HeartOutlined,
+  LoadingOutlined,
   ShoppingCartOutlined,
   StarFilled,
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { Button, Divider, InputNumber, Radio, Tag } from 'antd';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const ProductInfor = ({ product }: { product: ProductDetail }) => {
   const {
+    id,
     name,
     purchases,
-    price,
     colors,
     sizes,
-    salePrice,
-    rating,
+    saleValue = 0,
+    avgRating,
     totalReviews,
     description,
   } = product;
   const t = useTranslations('product');
-  const [color, setColor] = useState<string>(colors[0].name);
+
+  const [selectedColor, setSelectedColor] = useState<Color>();
+  const [selectedSize, setSelectedSize] = useState<string>();
+  const [activeVariant, setActiveVariant] = useState<ProductVariant>();
+  const [quantity, setQuantity] = useState<number>(1);
+  const [addStatus, setAddStatus] = useState<'idle' | 'loading' | 'success'>(
+    'idle',
+  );
+
+  const { data: variants } = useList({
+    resource: process.env.NEXT_PUBLIC_VARIANTS_ENDPOINT!,
+    params: {
+      pagination: { page: 1, limit: 0 },
+      filters: [{ field: 'productId', operator: 'eq', value: id }],
+    },
+  });
+
+  const { mutate: addItem } = useCreate({
+    resource: process.env.NEXT_PUBLIC_CARTS_ENDPOINT!,
+  });
+
+  useEffect(() => {
+    if (!variants?.data?.length) return;
+    const first = variants.data[0] as ProductVariant;
+    setSelectedColor(first.color);
+    setSelectedSize(first.size);
+    setActiveVariant(first);
+  }, [variants]);
+
+  useEffect(() => {
+    if (!variants?.data?.length || !selectedColor) return;
+
+    const sizesForColor = variants.data
+      .filter((v: ProductVariant) => v.color.name === selectedColor.name)
+      .map((v: ProductVariant) => v.size);
+
+    const resolvedSize =
+      selectedSize && sizesForColor.includes(selectedSize)
+        ? selectedSize
+        : sizesForColor[0];
+
+    if (resolvedSize !== selectedSize) {
+      setSelectedSize(resolvedSize);
+    }
+
+    const matched = variants.data.find(
+      (v: ProductVariant) =>
+        v.color.name === selectedColor.name && v.size === resolvedSize,
+    );
+
+    if (matched) setActiveVariant(matched);
+  }, [selectedColor, selectedSize, variants]);
+
+  const activeSizes: string[] = selectedColor
+    ? variants?.data
+        .filter((v: ProductVariant) => v.color.name === selectedColor.name)
+        .map((v: ProductVariant) => v.size)
+    : [];
+
+  const handleColorSelect = (colorName: string) => {
+    const variant = variants?.data.find(
+      (v: ProductVariant) => v.color.name === colorName,
+    ) as ProductVariant | undefined;
+    if (variant) setSelectedColor(variant.color);
+  };
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+  };
+
+  const handleAddToCart = () => {
+    if (addStatus !== 'idle') return;
+
+    setAddStatus('loading');
+    addItem(
+      {
+        variant_id: activeVariant?.id,
+        quantity: quantity,
+      },
+      {
+        onSuccess: () => {
+          setAddStatus('success');
+          setTimeout(() => setAddStatus('idle'), 2000);
+        },
+        onError: () => {
+          setAddStatus('idle');
+        },
+      },
+    );
+  };
 
   return (
     <div className='flex flex-col gap-4'>
@@ -41,19 +133,29 @@ export const ProductInfor = ({ product }: { product: ProductDetail }) => {
           variant='outlined'
           className='justify-items-end'
         >
-          Sale off 20%
+          {saleValue != 0 && (
+            <span>
+              {`Sale off ${saleValue < 1 ? saleValue * 100 + '%' : formatVND(saleValue)}`}
+            </span>
+          )}
         </Tag>
       </div>
 
       <div className='flex justify-between'>
         <div className='content-end'>
-          <Price price={price} oldPrice={salePrice} className='!text-3xl' />
+          {activeVariant && (
+            <Price
+              price={activeVariant.price}
+              saleValue={saleValue}
+              className='!text-3xl'
+            />
+          )}
         </div>
 
         <div className='text-[13px] text-gray-400 justify-items-end'>
-          <p>{formatNumberCount(purchases) + ' ' + t('purchases')} </p>
+          <p>{formatNumberCount(purchases) + ' ' + t('purchases')}</p>
           <span className='flex items-center'>
-            <p className='mr-0.5'>{rating}</p>
+            <p className='mr-0.5'>{avgRating}</p>
             <StarFilled style={{ color: '#f4a261' }} />
             <span className='mx-1'>•</span>
             <a href='#reviews' className='italic underline'>
@@ -70,47 +172,89 @@ export const ProductInfor = ({ product }: { product: ProductDetail }) => {
           <div>
             <div className='flex justify-between mb-3'>
               <span className='tracking-widest uppercase'>{t('color')}</span>
-              <span className='text-xs font-medium capitalize'>{color}</span>
+              <span className='text-xs font-medium capitalize'>
+                {activeVariant?.color?.name}
+              </span>
             </div>
             <div className='flex gap-3'>
-              {colors.map((c) => (
-                <Button
-                  key={c.name}
-                  shape='circle'
-                  style={{
-                    backgroundColor: c.hex,
-                    cursor: 'pointer',
-                    transform: color === c.name ? 'scale(1.2)' : 'scale(1)',
-                    border:
-                      color === c.name ? '2px solid var(--primary)' : 'none',
-                  }}
-                  onClick={() => setColor(c.name)}
-                />
-              ))}
+              {variants?.data &&
+                colors.map((c) => (
+                  <Button
+                    key={c.name}
+                    shape='circle'
+                    style={{
+                      backgroundColor: c.hex,
+                      cursor: 'pointer',
+                      transform:
+                        selectedColor?.name === c.name
+                          ? 'scale(1.2)'
+                          : 'scale(1)',
+                      border:
+                        selectedColor?.name === c.name
+                          ? '2px solid var(--primary)'
+                          : 'none',
+                    }}
+                    onClick={() => handleColorSelect(c.name)}
+                  />
+                ))}
             </div>
           </div>
 
           <div>
-            <div className='mb-3'>
+            <div className='flex justify-between mb-3'>
               <span className='tracking-widest uppercase'>{t('size')}</span>
+              <span className='text-md font-medium capitalize'>{`${t('stock')}: ${activeVariant?.stock}`}</span>
             </div>
-            <Radio.Group size='large'>
-              {sizes.map((s) => (
-                <Radio.Button key={s}>{s}</Radio.Button>
-              ))}
-            </Radio.Group>
+            {activeVariant && (
+              <Radio.Group
+                size='large'
+                value={selectedSize}
+                optionType='button'
+                buttonStyle='solid'
+                onChange={(e) => handleSizeSelect(e.target.value)}
+              >
+                {sizes.map((s) => (
+                  <Radio.Button
+                    key={s}
+                    value={s}
+                    disabled={!activeSizes.includes(s)}
+                  >
+                    {s}
+                  </Radio.Button>
+                ))}
+              </Radio.Group>
+            )}
           </div>
         </div>
 
         <div className='flex flex-col gap-3'>
           <div className='flex gap-3 mt-10'>
-            <InputNumber {...{ mode: 'spinner', defaultValue: 1 }} />
+            <InputNumber
+              {...{
+                mode: 'spinner',
+                max: activeVariant?.stock,
+                min: 1,
+                value: quantity,
+                onChange: (value: any) => setQuantity(value),
+              }}
+            />
             <Button
               className='!p-6 w-full uppercase'
               type='primary'
-              icon={<ShoppingCartOutlined />}
+              icon={
+                addStatus === 'loading' ? (
+                  <LoadingOutlined spin />
+                ) : addStatus === 'success' ? (
+                  <CheckOutlined />
+                ) : (
+                  <ShoppingCartOutlined />
+                )
+              }
+              disabled={activeVariant?.stock == 0 || addStatus !== 'idle'}
+              onClick={handleAddToCart}
+              loading={addStatus == 'loading'}
             >
-              {t('add_to_cart')}
+              {addStatus === 'success' ? t('add_success') : t('add_to_cart')}
             </Button>
           </div>
           <Button className='w-full !p-6 uppercase' icon={<HeartOutlined />}>

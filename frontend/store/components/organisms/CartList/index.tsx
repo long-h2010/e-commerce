@@ -7,10 +7,12 @@ import { memo } from 'react';
 export const CartList = memo(
   ({
     list,
-    onChangleQuantity,
+    onChangeQuantity,
+    onDelete,
   }: {
     list: ProductCart[];
-    onChangleQuantity: (id: string, price: number) => void;
+    onChangeQuantity: (id: string, price: number) => void;
+    onDelete: (id: string) => void;
   }) => {
     const t = useTranslations('cart');
 
@@ -19,9 +21,10 @@ export const CartList = memo(
         {list.length > 0 ? (
           list.map((item) => (
             <CartItem
-              key={item.productId}
+              key={item.variantId}
               item={item}
-              onChangleQuantity={onChangleQuantity}
+              onChangeQuantity={onChangeQuantity}
+              onDelete={onDelete}
             />
           ))
         ) : (

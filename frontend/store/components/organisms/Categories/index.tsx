@@ -13,7 +13,7 @@ export const Categories = ({ categories }: { categories: Category[] }) => {
               key={cat.id}
               category={cat.category}
               image={`/images/categories/${cat.category}.png`}
-              amount={cat.totalProducts}
+              amount={cat.productCount}
             />
           ))}
       </div>

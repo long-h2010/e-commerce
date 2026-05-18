@@ -1,7 +1,7 @@
 'use client';
 
-import { userService } from '@/services';
-import { authStore } from '@/stores';
+import { authService } from '@/services';
+import { useAuthStore } from '@/stores';
 import axios from 'axios';
 
 export const apiNoAuth = axios.create({
@@ -29,7 +29,7 @@ const processQueue = (error: any = null) => {
 };
 
 api.interceptors.request.use((config) => {
-  const token = authStore.getState().accessToken;
+  const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -52,8 +52,8 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const newToken = await userService.refreshToken();
-        authStore.setState({ accessToken: newToken });
+        const newToken = await authService.refreshToken();
+        useAuthStore.setState({ accessToken: newToken });
 
         processQueue();
 
@@ -61,7 +61,8 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (e) {
         processQueue(e);
-        userService.logout();
+        useAuthStore.getState().clearAuth();
+        await authService.logout();
 
         return Promise.reject(e);
       } finally {

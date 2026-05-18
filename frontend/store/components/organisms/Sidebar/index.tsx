@@ -1,58 +1,62 @@
 'use client';
 
-import { DressIcon, PantsIcon, ShirtIcon } from '@/components/atoms';
-import { AppstoreOutlined } from '@ant-design/icons';
+import { useList } from '@/hooks';
+import { buildTreeData } from '@/lib/utils';
+import { useCategoryStore } from '@/stores';
+import { BaseCategory } from '@/types';
 import { Menu } from 'antd';
-import type { MenuProps } from 'antd';
-import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 
-type MenuItem = Required<MenuProps>['items'][number];
-
-const NAV_CONFIG = {
-  men: ['tops', 'bottoms'],
-  women: ['tops', 'bottoms', 'dresses'],
-} as const;
-
-const ICON_MAP = {
-  tops: <ShirtIcon className='!ml-10' />,
-  bottoms: <PantsIcon className='!ml-10' />,
-  dresses: <DressIcon className='!ml-10' />,
-};
-
 export const Sidebar = () => {
-  const t = useTranslations('sidebar');
-  const category = useParams().category as keyof typeof NAV_CONFIG;
+  const category = useParams().category;
+  const { data: categories } = useList({ resource: 'categories' });
+  const { setSelectedCategoryId } = useCategoryStore();
 
-  const navs = useMemo(() => {
-    return (NAV_CONFIG[category] || []).map((key) => ({
-      key,
-      label: <p>{t(key)}</p>,
-      icon: ICON_MAP[key],
-      children: Object.values(t.raw(`${key}_items`)).map((item: any) => ({
-        key: item,
-        label: <p className='ml-10'>{item}</p>,
-      })),
+  const navItems = useMemo(() => {
+    if (!categories?.data) return [];
+
+    const root = categories.data.find(
+      (c: BaseCategory) => c.category === category,
+    );
+    if (!root) return [];
+
+    const getAllDescendants = (parentId: string): BaseCategory[] => {
+      const children = categories.data.filter(
+        (c: BaseCategory) => c.parentId === parentId,
+      );
+      return [
+        ...children,
+        ...children.flatMap((c: BaseCategory) => getAllDescendants(c.id)),
+      ];
+    };
+
+    const descendants = getAllDescendants(root.id);
+
+    const tree = buildTreeData(descendants, (c) => ({
+      key: c.id,
+      label: c.category,
     }));
-  }, [category, t]);
 
-  const items: MenuItem[] = [
-    {
-      key: 'all',
-      label: <p>{t('all_products')}</p>,
-      icon: <AppstoreOutlined className='!ml-10' />,
-    },
-    ...navs,
-  ];
+    return [
+      {
+        key: 'all',
+        label: <p>All</p>,
+      },
+      ...tree,
+    ];
+  }, [categories, category]);
 
   return (
     <Menu
       mode='inline'
-      items={items}
+      items={navItems}
       style={{ width: 256 }}
       defaultSelectedKeys={['all']}
-      className='h-screen'
+      onSelect={({ key }) => {
+        setSelectedCategoryId(key === 'all' ? '' : key);
+      }}
+      className='h-screen capitalize'
     />
   );
 };

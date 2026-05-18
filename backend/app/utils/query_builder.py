@@ -1,6 +1,6 @@
 from typing import Any, Type, TypeVar
 
-from sqlalchemy import BigInteger, ColumnElement, FromClause, String
+from sqlalchemy import ARRAY, BigInteger, ColumnElement, FromClause, String
 from sqlalchemy.orm import InstrumentedAttribute, Query
 from sqlalchemy.orm.util import AliasedClass
 from sqlmodel import asc, cast, desc, or_
@@ -35,16 +35,17 @@ SQLALCHEMY_QUERY_MAPPER = {
 }
 
 
-def get_column(model: Type[Model] | AliasedClass, field_name: str) -> InstrumentedAttribute | None:
+def get_column(
+    model: Type[Model] | AliasedClass, field_name: str
+) -> InstrumentedAttribute | None:
     column = getattr(model, field_name, None)
     if column is None and field_name not in [
         "keyword",
         "keyword_columns",
         "page",
-        "page_size",
+        "limit",
         "select_columns",
-        "sort_columns",
-        "sort_orders",
+        "sort",
     ]:
         raise ValueError(f"Column {field_name} is not found in {model}")
     return column
@@ -80,17 +81,37 @@ def _create_and_filters(column: str, op: str, value: Any) -> list[ColumnElement 
                 and_filters.append(column.is_(value))
             else:
                 and_filters.append(
-                    sqlalchemy_filter(column)(value) if op != "between" else sqlalchemy_filter(column)(*value)
+                    sqlalchemy_filter(column)(value)
+                    if op != "between"
+                    else sqlalchemy_filter(column)(*value)
                 )
     return and_filters
 
 
 def dict_to_sqlalchemy_filter_options(
-    model: Type[Model] | AliasedClass, child_aliases: list[AliasedClass | FromClause] | None = None, **kwargs
+    model: Type[Model] | AliasedClass,
+    child_aliases: list[AliasedClass | FromClause] | None = None,
+    **kwargs,
 ) -> list[ColumnElement]:
     filters = []
 
     def process_filters(target_column: str, target_op: str, target_value: Any):
+        if isinstance(getattr(target_column.type, "impl", target_column.type), ARRAY):
+            if target_op in ("any", "in", "overlap"):
+                if isinstance(target_value, (list, tuple)):
+                    filters.append(target_column.overlap(target_value))
+                else:
+                    filters.append(target_column.any(target_value))
+                return
+
+            elif target_op == "contains":
+                filters.append(target_column.contains(target_value))
+                return
+
+            elif target_op == "contained_by":
+                filters.append(target_column.contained_by(target_value))
+                return
+
         # OR / MOR
         or_filters = _create_or_filters(target_column, target_op, target_value)
         if or_filters:
@@ -122,24 +143,41 @@ def dict_to_sqlalchemy_filter_options(
                         if _column:
                             sqlalchemy_filter = SQLALCHEMY_QUERY_MAPPER.get(_op)
                             if sqlalchemy_filter is not None:
-                                if _op == "cast_icontains" or isinstance(_column.type, BigInteger):
-                                    or_filters.append(cast(_column, String).ilike(_value))
+                                if _op == "cast_icontains" or isinstance(
+                                    _column.type, BigInteger
+                                ):
+                                    or_filters.append(
+                                        cast(_column, String).ilike(_value)
+                                    )
                                 else:
-                                    or_filters.append(sqlalchemy_filter(_column)(_value))
+                                    or_filters.append(
+                                        sqlalchemy_filter(_column)(_value)
+                                    )
                 if or_filters:
                     filters.append(or_(*or_filters))
             else:
                 column = resolve_property_column(
-                    field_name, get_column(model, field_name), getattr(model, "property_sorts", []), child_aliases
+                    field_name,
+                    get_column(model, field_name),
+                    getattr(model, "property_sorts", []),
+                    child_aliases,
                 )
                 if column and value is not None:
                     process_filters(column, op, value)
-                if column and value is None and op in ["is", "is_not", "is_distinct_from", "is_not_distinct_from"]:
+                if (
+                    column
+                    and value is None
+                    and op
+                    in ["is", "is_not", "is_distinct_from", "is_not_distinct_from"]
+                ):
                     process_filters(column, op, value)
         else:
             # NON FILTER
             column = resolve_property_column(
-                key, get_column(model, key), getattr(model, "property_sorts", []), child_aliases
+                key,
+                get_column(model, key),
+                getattr(model, "property_sorts", []),
+                child_aliases,
             )
             if column:
                 filters.append(column == value)
@@ -166,19 +204,27 @@ def apply_sorting(
                 sort_orders = [sort_orders] * len(sort_columns)
 
             if len(sort_columns) != len(sort_orders):
-                raise ValueError("The length of sort_columns and sort_orders must match.")
+                raise ValueError(
+                    "The length of sort_columns and sort_orders must match."
+                )
 
             for order in sort_orders:
                 if order not in ["asc", "desc"]:
-                    raise ValueError(f"Select sort operator {order} is not supported, only supports `asc`, `desc`")
+                    raise ValueError(
+                        f"Select sort operator {order} is not supported, only supports `asc`, `desc`"
+                    )
 
-        validated_sort_orders = ["asc"] * len(sort_columns) if not sort_orders else sort_orders
+        validated_sort_orders = (
+            ["asc"] * len(sort_columns) if not sort_orders else sort_orders
+        )
         property_sorts = getattr(model, "property_sorts", [])
 
         for idx, column_name in enumerate(sort_columns):
             column = get_column(model, column_name)
             # Resolve the column if it's a property
-            column = resolve_property_column(column_name, column, property_sorts, child_aliases)
+            column = resolve_property_column(
+                column_name, column, property_sorts, child_aliases
+            )
             order = validated_sort_orders[idx]
             stmt = stmt.order_by(asc(column) if order == "asc" else desc(column))
 
@@ -202,7 +248,14 @@ def find_alias_for_relation(table_name, column_name, aliases):
                     if alias.__tablename__ == related_table:
                         return getattr(alias, column_key, None)
             return column_attr
-    return next((getattr(alias, column_name, None) for alias in aliases if alias.__tablename__ == table_name), None)
+    return next(
+        (
+            getattr(alias, column_name, None)
+            for alias in aliases
+            if alias.__tablename__ == table_name
+        ),
+        None,
+    )
 
 
 def resolve_property_column(column_name, column, property_sorts, child_aliases):

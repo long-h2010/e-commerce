@@ -1,10 +1,14 @@
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlmodel import Field
+from sqlmodel import Field, Relationship
 
+from app.core.enums.user import UserRole
 from app.models.base_model import BaseModel
 
-from app.core.enums.user_role import UserRole
+if TYPE_CHECKING:
+    from backend.app.models.cart import Cart
+    from app.models.review import Review
+    from app.models.order import Order
 
 
 class User(BaseModel, table=True):
@@ -20,3 +24,15 @@ class User(BaseModel, table=True):
 
     role: UserRole = Field(default=UserRole.CUSTOMER)
     is_active: bool = Field(default=True)
+
+    cart: Optional["Cart"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    reviews: List["Review"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    orders: List["Order"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )

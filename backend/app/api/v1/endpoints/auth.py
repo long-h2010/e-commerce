@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from app.core.middleware import inject
 from app.core.container import Container
-from app.schemas.auth_schema import LoginRequest, LoginResponse, RegisterRequest
+from app.schemas.auth_schema import LoginRequest, LoginResponse, RegisterRequest, SendOtpRequest
 from app.services.auth_service import AuthService
 
 
@@ -29,14 +29,21 @@ def login(
 
     return {"access_token": result["access_token"], "user": result["user"]}
 
+@router.post("/send-otp")
+@inject
+async def send_otp(
+    data: SendOtpRequest,
+    service: AuthService = Depends(Provide[Container.auth_service]),
+):
+    return await service.send_otp(data)
 
 @router.post("/register")
 @inject
-def register(
+async def register(
     data: RegisterRequest,
     service: AuthService = Depends(Provide[Container.auth_service]),
 ):
-    return service.register(data)
+    return await service.register(data)
 
 
 @router.post("/refresh-token")

@@ -23,6 +23,7 @@ export const Banner = () => {
           alt='basic'
           src='/images/banner.png'
           preview={{ open: false }}
+          loading='lazy'
         />
       </div>
     </div>

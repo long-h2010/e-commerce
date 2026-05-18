@@ -1,3 +1,5 @@
+'use client';
+
 import { Logo } from '@/components/atoms';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useLogin } from '@refinedev/core';
@@ -15,6 +17,7 @@ export const Login = () => {
     username: '',
     password: '',
   });
+  const [error, setError] = useState<string>();
 
   return (
     <Layout className='flex !min-h-screen items-center justify-center'>
@@ -37,11 +40,20 @@ export const Login = () => {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
+          {error && <span className='text-xs text-red-500'>{error}</span>}
         </div>
         <Button
           type='primary'
           className='w-full !p-5 !mt-5'
-          onClick={() =>login(form)}
+          onClick={() =>
+            login(form, {
+              onError: (e: any) =>
+                setError(
+                  e?.response?.data?.detail ||
+                    'Invalid username or password. Please try again.',
+                ),
+            })
+          }
         >
           Login
         </Button>

@@ -34,6 +34,9 @@ class Configs(BaseSettings):
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     )
 
+    # frontend
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
     # date
     DATETIME_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
     DATE_FORMAT: str = "%Y-%m-%d"
@@ -41,7 +44,7 @@ class Configs(BaseSettings):
     # auth
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 15*24*60
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 15 * 24 * 60
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
@@ -72,6 +75,27 @@ class Configs(BaseSettings):
     PAGE: int = 1
     PAGE_SIZE: int = 20
     SORT_BY: str = "updated_at"
+
+    # cloudinary
+    CLOUD_NAME: str = os.getenv("CLOUDINARY_NAME")
+    CLOUD_API_KEY: str = os.getenv("CLOUDINARY_API_KEY")
+    CLOUD_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET")
+
+    # redis
+    REDIS_URL: str = os.getenv("REDIS_URL")
+
+    # mail
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD")
+    MAIL_FROM: str = os.getenv("MAIL_FROM")
+    MAIL_PORT: str = os.getenv("MAIL_PORT")
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER")
+    MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME")
+
+    # payos
+    PAYOS_CLIENT_ID: str = os.getenv("PAYOS_CLIENT_ID")
+    PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY")
+    PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY")
 
     class Config:
         case_sensitive = True

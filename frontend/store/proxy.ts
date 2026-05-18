@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware({ ...routing, localeDetection: false });
 
-const publicRoutes: string[] = ['/', '/login', '/products', '/cart'];
+const publicRoutes: string[] = ['/', '/login', '/products', '/temp'];
 
 // Helper: Check pathname is public route
 function isPublicRoute(pathname: string): boolean {
@@ -31,9 +31,13 @@ export default function middleware(request: NextRequest) {
   const token = request.cookies.get('refresh_token')?.value;
 
   if (!token) {
-    const locale = pathname.split('/')[1] || routing.defaultLocale || 'en';
+    const firstSegment = pathname.split('/')[1];
+    const supportedLocales: string[] = [...routing.locales];
 
-    // Build login path với locale (ví dụ: /vi/login hoặc /login nếu default không prefix)
+    const locale = supportedLocales.includes(firstSegment)
+      ? firstSegment
+      : routing.defaultLocale;
+
     const loginPath =
       locale === routing.defaultLocale ? '/login' : `/${locale}/login`;
     const loginUrl = new URL(loginPath, request.url);

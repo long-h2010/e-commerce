@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.middleware import inject
-from backend.app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user
 
 
 router = APIRouter(prefix="/users", tags=["user"])

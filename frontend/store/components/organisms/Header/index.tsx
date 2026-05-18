@@ -1,13 +1,18 @@
-import { HeaderMenu, Logo } from '@/components/molecules';
+'use client';
+
+import { HeaderMenu, Logo, ProfileMenu } from '@/components/molecules';
+import { useAuthStore } from '@/stores';
 import {
   BellOutlined,
   ShoppingCartOutlined,
   TranslationOutlined,
 } from '@ant-design/icons';
-import { Avatar, Badge } from 'antd';
+import { Badge, Button } from 'antd';
 import Link from 'next/link';
 
 export const Header = () => {
+  const { user } = useAuthStore();
+
   return (
     <header className='flex w-full sticky top-0 px-16 items-center justify-between bg-white z-100'>
       <Logo />
@@ -21,7 +26,13 @@ export const Header = () => {
         <Badge dot>
           <BellOutlined style={{ color: 'black' }} />
         </Badge>
-        <Avatar />
+        {user ? (
+          <ProfileMenu />
+        ) : (
+          <Button type='link' href='/login' className='!text-brand'>
+            Login
+          </Button>
+        )}
         <TranslationOutlined style={{ color: '#5e5e5e' }} />
       </div>
     </header>

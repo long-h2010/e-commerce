@@ -1,6 +1,8 @@
 export * from './Header';
 export * from './Sidebar';
 export * from './Footer';
+export * from './LoginForm';
+export * from './RegisterForm';
 export * from './Banner';
 export * from './MarqueeStrip';
 export * from './Categories';
@@ -10,3 +12,7 @@ export * from './ProductInfor';
 export * from './ProductImages';
 export * from './ProductReviews';
 export * from './CartList';
+export * from './CartSummary';
+export * from './OrderSummary';
+export * from './InformationStep';
+export * from './PaymentsStep';

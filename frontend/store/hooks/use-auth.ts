@@ -1,41 +1,35 @@
-import { userService } from '@/services';
-import { authStore } from '@/stores';
-import { UserSignIn } from '@/types';
-import { useMutation, useQuery } from '@tanstack/react-query';
+'use client';
+
+import { authService } from '@/services';
+import { useAuthStore } from '@/stores';
+import { UserSignIn, UserSignUp } from '@/types';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-export function useCurrentUser() {
-  // const { accessToken, setAuth, clearAuth } = authStore();
-  // return useQuery({
-  //   queryKey: ['current-user'],
-  //   queryFn: authService.getCurrentUser,
-  //   enabled: !!accessToken,
-  //   staleTime: 5 * 60 * 1000,
-  //   retry: false,
-  //   onError: () => {
-  //     clearAuth();
-  //   },
-  // });
-}
 export function useAuth() {
-  const { user, setAuth, clearAuth } = authStore();
+  const { user, setAuth, clearAuth } = useAuthStore();
   const router = useRouter();
 
   const login = useMutation({
-    mutationFn: (data: UserSignIn) => userService.login(data),
+    mutationFn: (data: UserSignIn) => authService.login(data),
 
     onSuccess: ({ user, access_token }: any) => {
       setAuth(user, access_token);
       router.push('/');
     },
+  });
 
-    onError: (error: any) => {
-      console.error('Login error:', error);
+  const register = useMutation({
+    mutationFn: (data: UserSignUp) => authService.register(data),
+
+    onSuccess: ({ user, access_token }: any) => {
+      setAuth(user, access_token);
+      router.push('/');
     },
   });
 
   const logout = useMutation({
-    mutationFn: userService.logout,
+    mutationFn: authService.logout,
 
     onSuccess: () => {
       clearAuth();
@@ -51,6 +45,7 @@ export function useAuth() {
   return {
     user,
     login: login.mutate,
+    register: register.mutate,
     logout: logout.mutate,
   };
 }

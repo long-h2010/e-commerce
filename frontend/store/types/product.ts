@@ -3,34 +3,50 @@ export type ProductBase = {
   name: string;
   thumbnail: string;
   price: number;
-  salePrice?: number;
+  saleValue?: number;
   badge?: 'New' | 'Sale';
   purchases: number;
-  rating: number;
+  avgRating: number;
 };
 
-type Color = {
+export type Color = {
   name: string;
   hex: string;
 }
 
+export type ProductImage = {
+  id: string;
+  url: string;
+  isThumbnail: boolean;
+};
+
+export type ProductVariant = {
+  id: string;
+  color: Color;
+  size: string;
+  cost: number;
+  price: number;
+  stock: number;
+};
+
 export type ProductDetail = ProductBase & {
   description: string;
-  images?: string[];
+  images?: ProductImage[];
   colors: Color[];
   sizes: string[]
-  stock: number;
   totalReviews: number;
 };
 
 export type ProductCart = {
+  id: string;
+  variantId: string;
   productId: string;
   name: string;
   thumbnail: string;
-  color: string;
+  color: Color;
   size: string;
   price: number;
-  salePrice?: number;
+  saleValue?: number;
   quantity: number;
   stock: number;
 }

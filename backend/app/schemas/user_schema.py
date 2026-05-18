@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from app.schemas.base_schema import ModelBaseInfo, SearchOptions
-from app.core.enums.user_role import UserRole
+from app.core.enums.user import UserRole
 
 
 class BaseUser(BaseModel):
@@ -26,7 +26,7 @@ class User(ModelBaseInfo, BaseUser): ...
 
 
 class FindUserAuth(BaseModel):
-    phone_number: str
+    username: str
 
 
 class FindUserResult(BaseModel):

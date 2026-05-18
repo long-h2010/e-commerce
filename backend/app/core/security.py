@@ -54,8 +54,8 @@ def verify_jwt_token(token: str, type: Literal["access", "refresh"]):
     except jwt.InvalidTokenError:
         raise Exception("Invalid token")
 
-class JWTBearer(HTTPBearer):
-    def __init__(self, auto_error: bool = True):
+class   JWTBearer(HTTPBearer):
+    def __init__(self, auto_error: bool = False):
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
@@ -67,12 +67,12 @@ class JWTBearer(HTTPBearer):
                 raise AuthError(detail="Invalid token or expired token.")
             return credentials.credentials
         else:
-            raise AuthError(detail="Invalid authorization code.")
+            return None
 
-    def verify_jwt(self, jwt_token: str) -> bool:
+    def verify_jwt(self, jwt_token: str, token_type: Literal["access", "refresh"] = "access") -> bool:
         is_token_valid: bool = False
         try:
-            payload = verify_jwt_token(jwt_token)
+            payload = verify_jwt_token(jwt_token, token_type)
         except Exception:
             payload = None
         if payload:

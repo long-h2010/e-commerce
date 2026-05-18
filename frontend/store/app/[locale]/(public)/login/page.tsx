@@ -2,109 +2,39 @@
 
 import { GoogleLoginButton } from '@/components/atoms';
 import { Logo } from '@/components/molecules';
-import { useAuth } from '@/hooks';
-import {
-  LockOutlined,
-  PhoneOutlined,
-  SafetyOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
-import { Button, Checkbox, Divider, Input, Tabs, TabsProps } from 'antd';
+import { LoginForm, RegisterForm } from '@/components/organisms';
+import { useAlert, useAuth, useCreate } from '@/hooks';
+import { Button, Checkbox, Divider, Form, Tabs } from 'antd';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 type Tab = 'login' | 'register';
 
-interface FormState {
-  username: string;
-  phoneNumber: string;
-  password: string;
-  confirmPassword: string;
-  otp: string;
-}
-
 export default function Login() {
   const t = useTranslations('auth');
-  const { login } = useAuth();
+  const { login, register } = useAuth();
+  const { toast } = useAlert();
   const [tab, setTab] = useState<Tab>('login');
-  const [form, setForm] = useState<FormState>({
-    username: '',
-    phoneNumber: '',
-    password: '',
-    confirmPassword: '',
-    otp: '',
+  const [form] = Form.useForm();
+  const [error, setError] = useState<string>();
+  const { mutate: sendOtp, isPending } = useCreate({
+    resource: process.env.NEXT_PUBLIC_SEND_OTP_ENDPOINT!,
   });
 
-  const tabLoginItems: TabsProps['items'] = [
-    {
-      key: 'login',
-      label: t('login'),
-      children: (
-        <div className='flex flex-col gap-3.5'>
-          <Input
-            className='!py-2'
-            placeholder={t('username')}
-            prefix={<UserOutlined />}
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
-          />
-          <Input
-            className='!py-2'
-            placeholder={t('password')}
-            prefix={<LockOutlined />}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </div>
-      ),
-    },
-    {
-      key: 'register',
-      label: t('register'),
-      children: (
-        <div className='flex flex-col gap-3.5'>
-          <Input
-            className='!py-2'
-            placeholder={t('username')}
-            prefix={<UserOutlined />}
-          />
-          <Input
-            className='!py-2'
-            placeholder={t('full_name')}
-            prefix={<UserOutlined />}
-          />
-          <Input
-            className='!py-2'
-            placeholder={t('password')}
-            prefix={<LockOutlined />}
-          />
-          <Input
-            className='!py-2'
-            placeholder={t('confirm_password')}
-            prefix={<LockOutlined />}
-          />
-          <div className='flex gap-3'>
-            <Input
-              className='!py-2'
-              placeholder={t('phone_number')}
-              prefix={<PhoneOutlined />}
-            />
-            <Button color='primary' variant='outlined' className='!h-10'>
-              {t('send_otp')}
-            </Button>
-          </div>
-          <Input
-            className='!py-2'
-            placeholder={t('otp_code')}
-            prefix={<SafetyOutlined />}
-          />
-        </div>
-      ),
-    },
-  ];
-
   const handleTabChange = (key: string) => {
+    setError('');
     setTab(key as Tab);
+  };
+
+  const handleSendOtp = () => {
+    const email = form.getFieldValue('email');
+
+    if (!email) {
+      form.validateFields(['email']);
+      return;
+    }
+
+    sendOtp({ email });
   };
 
   return (
@@ -114,14 +44,72 @@ export default function Login() {
           <Logo />
         </div>
 
-        <Tabs
-          className='!my-5'
-          items={tabLoginItems}
-          onChange={handleTabChange}
-        />
+        <Form
+          form={form}
+          onValuesChange={() => setError('')}
+          onFinish={(values) =>
+            tab == 'login'
+              ? login(values, {
+                  onSuccess: () => {
+                    toast.success(t('login_success'));
+                  },
+                  onError: (e: any) =>
+                    setError(e?.response?.data?.detail || t('error')),
+                })
+              : register(values, {
+                  onSuccess: () => {
+                    toast.success(t('register_success'));
+                  },
+                  onError: (e: any) => {
+                    const detail = e?.response?.data?.detail;
+
+                    if (Array.isArray(detail)) {
+                      const first = detail[0];
+                      const field = first?.loc?.[1];
+                      const fieldLabel = field
+                        ? field.charAt(0).toUpperCase() + field.slice(1)
+                        : '';
+                      const msg = first?.msg?.replace(
+                        'String should have',
+                        `${fieldLabel} should have`,
+                      );
+                      setError(msg);
+                    } else if (typeof detail === 'string') {
+                      setError(detail);
+                    } else {
+                      setError(t('error'));
+                    }
+                  },
+                })
+          }
+          className='!mb-5'
+        >
+          <Tabs
+            className='!mb-3'
+            items={[
+              {
+                key: 'login',
+                label: t('login'),
+                children: <LoginForm />,
+              },
+              {
+                key: 'register',
+                label: t('register'),
+                children: (
+                  <RegisterForm
+                    sendOtp={handleSendOtp}
+                    loadingSend={isPending}
+                  />
+                ),
+              },
+            ]}
+            onChange={handleTabChange}
+          />
+          {error && <span className='text-xs text-red-500'>{error}</span>}
+        </Form>
 
         {tab === 'login' && (
-          <div className='flex items-center justify-between mt-1.5 mb-5'>
+          <div className='flex items-center justify-between my-5'>
             <Checkbox>{t('remember_me')}</Checkbox>
             <a href='#' className='text-[13px] text-brand hover:underline'>
               {t('forgot_password')}
@@ -132,13 +120,7 @@ export default function Login() {
         <Button
           type='primary'
           className='w-full !p-5 mb-4'
-          onClick={() => {
-            if (tab == 'login')
-              return login({
-                username: form.username,
-                password: form.password,
-              });
-          }}
+          onClick={() => form.submit()}
         >
           {tab === 'login' ? t('login') : t('register')}
         </Button>

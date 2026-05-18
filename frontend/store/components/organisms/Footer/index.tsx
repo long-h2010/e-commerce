@@ -22,13 +22,13 @@ export const Footer = () => {
             {t('title')}
           </p>
           <div className='flex gap-3'>
-            <Link href={'#'}>
+            <Link href={'#'} className='!text-gray-500'>
               <FacebookOutlined style={{ fontSize: '32px' }} />
             </Link>
-            <Link href={'#'}>
+            <Link href={'#'} className='!text-gray-500'>
               <InstagramOutlined style={{ fontSize: '32px' }} />
             </Link>
-            <Link href={'#'}>
+            <Link href={'#'} className='!text-gray-500'>
               <TikTokOutlined style={{ fontSize: '32px' }} />
             </Link>
           </div>
@@ -41,12 +41,12 @@ export const Footer = () => {
             <ul className='space-y-3'>
               {Object.values(c.items).map((item: any) => (
                 <li key={item}>
-                  <a
+                  <Link
                     href='#'
-                    className='text-xs text-stone-500 hover:text-stone-900 transition-colors'
+                    className='text-xs !text-stone-500 !hover:text-brand transition-colors'
                   >
                     {item}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

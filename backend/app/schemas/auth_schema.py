@@ -1,15 +1,21 @@
 import re
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.schemas.user_schema import User
 
 
+class SendOtpRequest(BaseModel):
+    email: EmailStr
+
+
 class RegisterRequest(BaseModel):
     name: str = Field(min_length=2, max_length=50)
-    phone_number: str
+    username: str = Field(min_length=2, max_length=50)
+    email: EmailStr
     password: str
     confirm_password: str
+    otp: str
 
     @field_validator("password")
     @classmethod
@@ -30,7 +36,7 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    phone_number: str
+    username: str
     password: str
 
 

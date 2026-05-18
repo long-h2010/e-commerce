@@ -4,7 +4,7 @@ import { Menu, MenuProps } from 'antd';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 type MenuItem = Required<MenuProps>['items'][number];
 

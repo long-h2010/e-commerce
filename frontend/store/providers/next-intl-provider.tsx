@@ -6,7 +6,11 @@ type Props = {
   messages: any;
 };
 
-export default function NextIntlProvider({ children, locale, messages }: Props) {
+export default function NextIntlProvider({
+  children,
+  locale,
+  messages,
+}: Props) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       {children}

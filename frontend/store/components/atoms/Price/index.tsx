@@ -1,24 +1,23 @@
-import { formatVND } from '@/lib/utils';
-import { Typography } from 'antd';
-
-const { Text } = Typography;
+import { calSalePrice, formatVND } from '@/lib/utils';
 
 export const Price = ({
   price,
-  oldPrice,
-  className
+  saleValue = 0,
+  className,
 }: {
   price: number;
-  oldPrice?: number;
+  saleValue?: number;
   className?: string;
 }) => {
+  const money = calSalePrice({ price, saleValue });
+
   return (
     <span>
-      <Text strong className={className}>{formatVND(price)}</Text>
-      {oldPrice && (
-        <Text delete type='secondary' className='!text-[0.8em] ml-2'>
-          {formatVND(oldPrice)}
-        </Text>
+      <span className={`${className} font-semibold`}>{formatVND(money)}</span>
+      {saleValue != 0 && (
+        <span className='!text-[0.8em] ml-2 line-through'>
+          {formatVND(price)}
+        </span>
       )}
     </span>
   );

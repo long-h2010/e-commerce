@@ -41,11 +41,21 @@
       },
       "2": {
         "title": "Support",
-        "items": { "1": "Size chart", "2": "Returns and exchanges", "3": "Shipping", "4": "Contact us" }
+        "items": {
+          "1": "Size chart",
+          "2": "Returns and exchanges",
+          "3": "Shipping",
+          "4": "Contact us"
+        }
       },
       "3": {
         "title": "Brand",
-        "items": { "1": "Size chart", "2": "About us", "3": "Career", "4": "Blog" }
+        "items": {
+          "1": "Size chart",
+          "2": "About us",
+          "3": "Career",
+          "4": "Blog"
+        }
       }
     },
     "sign": "© 2026 CLOTHES Fashion.",
@@ -61,8 +71,9 @@
     "login": "Login",
     "register": "Register",
     "username": "Username",
-    "full_name": "Full name",
+    "name": "Full name",
     "phone_number": "Phone number",
+    "email": "Email",
     "password": "Password",
     "confirm_password": "Confirm password",
     "forgot_password": "Forgot password?",
@@ -70,7 +81,19 @@
     "send_otp": "Send OTP",
     "otp_code": "OTP code",
     "or": "Or",
-    "google_login": "Login with Google"
+    "google_login": "Login with Google",
+    "login_success": "Login successfully",
+    "register_success": "Register and login successfully",
+    "error": "Something error. Please try again."
+  },
+
+  "validate": {
+    "require": "{field} is require",
+    "min_length": "{field} has at least {length} characters",
+    "max_length": "{field} has at most {length} characters",
+    "contain_number": "{field} must contain number",
+    "match": "{field} do not match",
+    "email": "Email is invalid"
   },
 
   "home": {
@@ -110,7 +133,9 @@
     "reviews": "reviews",
     "color": "color",
     "size": "size",
+    "stock": "stock",
     "add_to_cart": "Add to cart",
+    "add_success": "Added successful",
     "add_to_fav": "Add to favorites",
     "description": "description",
     "material_and_care": "materials & care",
@@ -138,10 +163,61 @@
     "discount": "Discount",
     "enter_coupon": "Enter coupon code",
     "apply": "Apply",
+    "discount_not_found": "* Discount not found",
+    "discount_message": "Discount {value} for {type}",
     "shipping_estimate": "Shipping estimate",
     "total": "Total",
     "add_to_fav": "Add to favorites",
     "remove": "Remove",
-    "checkout": "Proceed to checkout"
+    "checkout": "Proceed to checkout",
+    "remove_success": "Deleted item successful",
+    "remove_fail": "Error in delete item"
+  },
+
+  "checkout": {
+    "information": "Information",
+    "payments": "Payments",
+    "contact_information": "Contact Information",
+    "name": "Name",
+    "phone_number": "Phone number",
+    "address": "Address",
+    "city": "City",
+    "district": "District",
+    "ward": "Ward",
+    "note": "Note (Optional)",
+    "note_desc": "Add notes ...",
+    "shipping_methods": "Shipping Methods",
+    "standard": "Standard shipping (5-7 days)",
+    "express": "Express shipping (2-3 days)",
+    "payment_method": "Payment method",
+    "card": "Credit Card",
+    "payments_desc": "Payment information is encrypted and secure",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "payment_methods": {
+      "banking": "Banking (QR code)",
+      "cod": "Cash on delivery (COD)"
+    },
+    "payment_expire_desc": "The QR code is valid for {seconds} seconds. Please complete the payment within this time.",
+    "payment_expire": "Payment QR code has expired. Please choose another payment method or try again.",
+    "payment_success": "Payment successful!",
+    "refresh": "Refresh",
+    "bank": "Bank",
+    "account_number": "Account number",
+    "account_name": "Account name",
+    "transfer_amount": "Transfer amount",
+    "transfer_content": "Transfer content",
+    "transfer_desc": "Please enter the correct transfer content to ensure your payment is processed successfully.",
+    "cod_desc": "You will pay {amount} when the order is delivered to your address. Please prepare the exact amount to help our delivery staff."
+  },
+
+  "order": {
+    "title": "Order ({amount} items)",
+    "subtotal": "Subtotal",
+    "shipping_fee": "Shipping Fee",
+    "discount": "Discount",
+    "total": "Total"
   }
 }
