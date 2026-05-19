@@ -18,11 +18,13 @@ class Configs(BaseSettings):
     API: str = "/api"
     API_V1_STR: str = "/api/v1"
     API_V2_STR: str = "/api/v2"
+    DB_PROD: str =  os.getenv("DB_PROD")
+    DB_DEV: str = os.getenv("DB_DEV")
     PROJECT_NAME: str = "e-commerce-api"
     ENV_DATABASE_MAPPER: dict = {
-        "prod": "e-commerce",
+        "prod": DB_PROD,
         "stage": "stage-e-commerce",
-        "dev": "dev-e-commerce",
+        "dev": DB_DEV,
         "test": "test-e-commerce",
     }
     DB_ENGINE_MAPPER: dict = {
