@@ -68,6 +68,7 @@ class Configs(BaseSettings):
                 host=self.DB_HOST,
                 port=self.DB_PORT,
                 path=self.ENV_DATABASE_MAPPER[self.ENV],
+                query="sslmode=require",
             )
         )
 
