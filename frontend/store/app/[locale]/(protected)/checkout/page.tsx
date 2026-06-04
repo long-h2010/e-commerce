@@ -11,6 +11,7 @@ import { PaymentMethod, ProductCart } from '@/types';
 import { CreditCardOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Card, Divider, Form, Steps } from 'antd';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 const SHIPPING_FEE = {
@@ -20,6 +21,7 @@ const SHIPPING_FEE = {
 
 export default function Checkout() {
   const t = useTranslations('checkout');
+  const router = useRouter();
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
   const [items, setItems] = useState<ProductCart[]>([]);
@@ -107,11 +109,15 @@ export default function Checkout() {
         onSuccess: (data: any) => {
           const orderData = data.data;
           setConfirm(true);
-          setQrCode(orderData.qrCode);
-          setOrderId(orderData.order.id);
-          setOrderCode(orderData.order.orderCode);
-          setOrderTotal(orderData.order.totalAmount);
-          setTransferDetail(orderData.description);
+          if (orderData.order.paymentMethod == 'banking') {
+            setQrCode(orderData.qrCode);
+            setOrderId(orderData.order.id);
+            setOrderCode(orderData.order.orderCode);
+            setOrderTotal(orderData.order.totalAmount);
+            setTransferDetail(orderData.description);
+          } else {
+            router.push(`/orders/${orderData.order.id}`);
+          }
         },
       },
     );
@@ -152,7 +158,7 @@ export default function Checkout() {
                     qrCode={qrCode}
                     orderId={orderId}
                     orderCode={orderCode}
-                    amount={orderTotal}
+                    amount={total}
                     paymentMethod={paymentMethod}
                     setPaymentMethod={setPaymentMethod}
                     transferDetail={transferDetail}

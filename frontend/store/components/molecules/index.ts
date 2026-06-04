@@ -9,3 +9,7 @@ export * from './ReviewCard';
 export * from './ReviewSummary';
 export * from './CartItem';
 export * from './QRCode';
+export * from './HistorySummary';
+export * from './OrderItemList';
+export * from './OrderShippingAddress';
+export * from './HistoryItem';

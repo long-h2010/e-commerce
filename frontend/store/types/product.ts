@@ -7,6 +7,7 @@ export type ProductBase = {
   badge?: 'New' | 'Sale';
   purchases: number;
   avgRating: number;
+  createdAt: string;
 };
 
 export type Color = {

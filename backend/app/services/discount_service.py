@@ -175,3 +175,6 @@ class DiscountService(BaseService):
             return int(price * discount.value / 100)
         else:
             return int(discount.value)
+        
+    def get_total_discount_active(self):
+        return self._repository.get_total_discount_active()

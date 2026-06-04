@@ -218,6 +218,48 @@
     "subtotal": "Subtotal",
     "shipping_fee": "Shipping Fee",
     "discount": "Discount",
-    "total": "Total"
+    "total": "Total",
+    "order_infor": {
+      "title": {
+        "pending": "Your order is pending confirmation",
+        "confirmed": "Your order has been confirmed",
+        "shipping": "Your order is on the way",
+        "delivered": "Your order has been delivered",
+        "cancelled": "Your order has been cancelled"
+      },
+      "desc": {
+        "pending": "We have received your order and it is currently awaiting confirmation. You will receive an update once your order is approved.",
+        "confirmed": "Your order has been confirmed and is now being prepared for shipment. We will notify you once it is shipped.",
+        "shipping": "Your order has been shipped and is on its way to your delivery address.",
+        "delivered": "Your order has been delivered successfully. Thank you for shopping with us and we hope you enjoy your purchase.",
+        "cancelled": "Your order has been cancelled. If you have any questions or believe this was a mistake, please contact our support team."
+      },
+      "view_orders": "View orders",
+      "continue_shopping": "Continue shopping"
+    },
+    "order_code": "Order Code",
+    "order_date": "Order Date",
+    "payment_method": {
+      "title": "Payment Method",
+      "banking": "Banking",
+      "cod": "COD"
+    },
+    "shipping_method": {
+      "title": "Shipping Method",
+      "standard": "Standard",
+      "express": "Express"
+    },
+    "discount_amount": "Discount Amount",
+    "shipping_to": "Shipping to",
+    "my_orders": "My Orders",
+    "order_status": {
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "shipping": "Shipping",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "items": "{amount} items"
   }
 }

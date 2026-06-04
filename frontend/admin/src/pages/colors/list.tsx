@@ -11,6 +11,7 @@ import { Button, ColorPicker, Input, Space, Table } from 'antd';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { formatDate } from '@/lib/utils';
 import { useCreate, useUpdate } from '@refinedev/core';
+import { PageTemplate } from '@/components/templates';
 
 export const ColorList = () => {
   const { setState } = useHeaderStore();
@@ -75,7 +76,7 @@ export const ColorList = () => {
 
     createColor(
       {
-        resource: 'colors',
+        resource: import.meta.env.VITE_COLORS_ENDPOINT,
         values: {
           name: changing.name,
           hex: changing.hex,
@@ -118,7 +119,7 @@ export const ColorList = () => {
   }, []);
 
   return (
-    <div className='flex flex-col gap-5'>
+    <PageTemplate>
       <div className='flex justify-end'>
         <Input
           placeholder='Search by name or hex code'
@@ -248,6 +249,6 @@ export const ColorList = () => {
           }}
         />
       </Table>
-    </div>
+    </PageTemplate>
   );
 };

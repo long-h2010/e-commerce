@@ -23,5 +23,5 @@ export type Category = BaseCategory & {
 export type CategorySummary = {
   id: string;
   category: string;
-  totalProducts: number;
+  productCount: number;
 };

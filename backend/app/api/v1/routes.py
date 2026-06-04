@@ -10,6 +10,7 @@ from app.api.v1.endpoints.reviews import router as review_router
 from app.api.v1.endpoints.discounts import router as discount_router
 from app.api.v1.endpoints.carts import router as cart_router
 from app.api.v1.endpoints.orders import router as order_router
+from app.api.v1.endpoints.dashboard import router as dashboard_router
 
 routers = APIRouter(prefix="/v1")
 router_list = [
@@ -23,6 +24,7 @@ router_list = [
     discount_router,
     cart_router,
     order_router,
+    dashboard_router,
 ]
 
 for route in router_list:

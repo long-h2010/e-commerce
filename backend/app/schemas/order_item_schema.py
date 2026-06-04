@@ -1,10 +1,10 @@
-from re import sub
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 from app.schemas.base_schema import FindBase
+from app.schemas.product_variant_schema import VariantDetailResponse
 
 
 class BaseOrderItem(BaseModel):
@@ -13,7 +13,8 @@ class BaseOrderItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class FindOrderItem(FindBase): ...
+class FindOrderItem(FindBase):
+    order_id: UUID
 
 
 class CreateOrderItem(BaseModel):
@@ -27,7 +28,7 @@ class CreateOrderItem(BaseModel):
 
 class OrderItemResponse(BaseModel):
     id: UUID
-    variant_id: UUID
+    variant: VariantDetailResponse
     quantity: int
     price_at_time: int
     discount_id: Optional[UUID]

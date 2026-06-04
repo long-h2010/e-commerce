@@ -11,7 +11,7 @@ from app.schemas.review_schema import FindReview
 router = APIRouter(prefix="/reviews", tags=["review"])
 
 
-@router.get("")
+@router.get("/")
 @inject
 def get_list_review(
     find_review: FindReview = Query(),

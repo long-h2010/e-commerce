@@ -25,6 +25,7 @@ def login(
         httponly=True,
         secure=True,
         samesite=None,
+        max_age=7 * 24 * 60 * 60,
     )
 
     return {"access_token": result["access_token"], "user": result["user"]}

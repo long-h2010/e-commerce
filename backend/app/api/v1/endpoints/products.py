@@ -72,6 +72,7 @@ async def get_product(
 @router.put("/{product_id}")
 @inject
 async def update_product(
+    user: Annotated[User, Depends(SuperAdminRequired)],
     product_id: UUID,
     update_product: FormProduct = Depends(FormProduct.as_form),
     images: List[UploadFile] = File(None),
@@ -82,7 +83,7 @@ async def update_product(
 
 @router.delete("/{product_id}")
 @inject
-def delete_color(
+def delete_product(
     product_id: UUID,
     user: Annotated[User, Depends(SuperAdminRequired)],
     service: ProductService = Depends(Provide[Container.product_service]),

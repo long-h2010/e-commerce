@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from unittest import result
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -16,14 +17,22 @@ from app.services.order_item_service import OrderItemService
 from app.services.payment_service.factory import get_payment_service
 from app.services.discount_service import DiscountService
 from app.services.product_variant_service import ProductVariantService
+from app.services.cart_service import CartService
 from app.schemas.order_schema import (
     CreateOrder,
     CreateOrderResponse,
+    OrderHistoryResponse,
     OrderResponse,
     OrderStatusResponse,
 )
-from app.schemas.order_item_schema import CreateOrderItem
+from app.schemas.order_item_schema import (
+    CreateOrderItem,
+    FindOrderItem,
+    OrderItemResponse,
+)
 from app.models.order import Order
+from app.schemas.base_schema import FindResult, OverviewGrowthResponse
+from app.schemas.product_variant_schema import VariantDetailResponse
 
 SHIPPING_FEE = {
     ShippingMethod.STANDARD: 1000,
@@ -38,12 +47,33 @@ class OrderService(BaseService):
         item_service: OrderItemService,
         variant_service: ProductVariantService,
         discount_service: DiscountService,
+        cart_service: CartService,
     ):
         self._repository = repository
         self._item_service = item_service
         self._variant_service = variant_service
         self._discount_service = discount_service
+        self._cart_service = cart_service
         super().__init__(repository)
+
+    def overview(self, user_id: UUID | None = None):
+        return self._repository.overview(user_id)
+
+    def get_revenue_overview(self):
+        total = self._repository.get_total_revenue()
+        revenue_curr_month = self._repository.get_current_month_revenue()
+        revenue_prev_month = self._repository.get_previous_month_revenue()
+
+        growth = self.calculate_growth(revenue_curr_month, revenue_prev_month)
+
+        return OverviewGrowthResponse(total=total, growth=growth)
+
+    def get_order_overview(self):
+        result = self._repository.get_total_order_growth()
+        growth = self.calculate_growth(
+            result["total_in_month"], result["total_prev_month"]
+        )
+        return OverviewGrowthResponse(total=result["total"], growth=growth)
 
     async def create(self, user_id: UUID, payload: CreateOrder):
         variant_ids = [item.variant_id for item in payload.items]
@@ -107,7 +137,6 @@ class OrderService(BaseService):
 
         shipping_fee = SHIPPING_FEE[payload.shipping_method]
 
-        # 3. Discount toàn đơn
         order_discount_amount = 0
         if payload.discount_id:
             discount = self._discount_service.get_by_id(payload.discount_id)
@@ -116,10 +145,8 @@ class OrderService(BaseService):
             )
             print(f"Order discount amount: {order_discount_amount}")
 
-        # 4. Tổng tiền — tính, không tin frontend
         total_amount = subtotal + shipping_fee - order_discount_amount
 
-        # 5. Sinh order_code_int cho PayOS (cần là số nguyên, max 9_999_999)
         order_code_int = int(datetime.now(timezone.utc).timestamp() * 1000) % 9_999_999
 
         order = Order(
@@ -141,16 +168,23 @@ class OrderService(BaseService):
             total_amount=total_amount,
         )
 
+        if payload.payment_method == PaymentMethod.COD:
+            order.order_status = OrderStatus.CONFIRMED
+
+            self._cart_service.delete_by_options(
+                user_id=user_id,
+                items=variant_ids,
+            )
+
         order_created = self._repository.create(order)
 
         self._item_service.bulk_create(order_created.id, order_items)
 
-        # 7. Tạo payment link nếu không phải COD
         checkout_url = None
         qr_code = None
         description = None
 
-        if payload.payment_method != PaymentMethod.COD:
+        if payload.payment_method == PaymentMethod.BANKING:
             payment_svc = get_payment_service(payload.payment_method)
             checkout_url, qr_code, description = await payment_svc.create_payment_link(
                 order=order_created,
@@ -171,7 +205,6 @@ class OrderService(BaseService):
         if not is_paid:
             return {"message": "Payment not successful, ignored"}
 
-        # Tìm order theo order_code (int) — không phải UUID
         order = self._repository.read_by_field("order_code", payload.data.order_code)
         if not order:
             raise HTTPException(
@@ -179,20 +212,83 @@ class OrderService(BaseService):
                 detail="Order not found",
             )
 
-        # Idempotency
         if order.payment_status == PaymentStatus.PAID:
             return {"message": "Already processed"}
 
         self._repository.update_attr(order.id, "payment_status", PaymentStatus.PAID)
         self._repository.update_attr(order.id, "order_status", OrderStatus.CONFIRMED)
 
+        variant_ids = self._item_service.get_list_variant_id(
+            FindOrderItem(order_id=order.id)
+        )
+        self._cart_service.delete_by_options(
+            user_id=order.user_id,
+            items=variant_ids,
+        )
+
         return {"message": "OK"}
 
     def get_order_status(self, order_id: UUID) -> OrderStatusResponse:
         order = self._repository.read_by_field("id", order_id)
-        
+
         return OrderStatusResponse(
             order_id=order.id,
             order_status=order.order_status,
             payment_status=order.payment_status,
         )
+
+    def get_by_id(self, id):
+        find_items = FindOrderItem(order_id=id)
+        items = self._item_service.get_list(find_items)
+
+        order = self.get_by_field("id", id, eagers=["user"])
+
+        order_data = OrderResponse.model_validate(order).model_dump()
+        order_data["items"] = items
+
+        return OrderResponse(**order_data)
+
+    def get_list(
+        self,
+        schema,
+        eagers=[
+            "items",
+            "items.variant",
+            "items.variant.product",
+            "items.variant.product.thumbnail",
+        ],
+    ):
+        result = self._repository.read_by_options(schema, eagers)
+
+        orders = []
+        for order in result["founds"]:
+            history_items = []
+
+            for item in order.items:
+                history_items.append(
+                    OrderItemResponse(
+                        **item.model_dump(),
+                        variant=VariantDetailResponse.model_validate(item),
+                    )
+                )
+
+            orders.append(
+                OrderHistoryResponse(
+                    **order.model_dump(),
+                    items=history_items,
+                )
+            )
+
+        return FindResult(
+            founds=orders,
+            search_options=result["search_options"],
+        )
+
+    def get_monthly_revenue(self):
+        return self._repository.get_monthly_revenue()
+
+    def get_weekly_revenue(self):
+        return self._repository.get_weekly_revenue()
+
+    def get_top_products(self):
+        return self._repository.get_top_products()

@@ -5,6 +5,7 @@ interface Stat {
   value: string;
   color: string;
   icon?: React.ReactNode;
+  suffix?: React.ReactNode;
 }
 export const OverViewStats = ({ stats }: { stats: Stat[] }) => {
   return (
@@ -15,6 +16,7 @@ export const OverViewStats = ({ stats }: { stats: Stat[] }) => {
             title={stat.title}
             value={stat.value}
             prefix={stat.icon}
+            suffix={stat.suffix}
             valueStyle={{ color: stat.color }}
           />
         </Card>

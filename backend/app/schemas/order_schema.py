@@ -1,4 +1,5 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import Any, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
@@ -10,7 +11,8 @@ from app.core.enums.order import (
     PaymentStatus,
     ShippingMethod,
 )
-from app.schemas.order_item_schema import CreateOrderItem, OrderItemResponse
+from app.schemas.order_item_schema import CreateOrderItem
+from app.schemas.user_schema import UserResponse
 
 
 class BaseOrder(BaseModel):
@@ -19,7 +21,16 @@ class BaseOrder(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class FindOrder(FindBase): ...
+class FindOrder(FindBase):
+    user_id: Optional[UUID] = None
+    order_code: Optional[int] = None
+    order_status: Optional[OrderStatus] = None
+    payment_status: Optional[PaymentStatus] = None
+
+    order_status__ne: Optional[OrderStatus] = None
+
+    created_at__ge: Optional[datetime] = None
+    created_at__le: Optional[datetime] = None
 
 
 class CreateOrder(BaseModel):
@@ -32,7 +43,7 @@ class CreateOrder(BaseModel):
     city: str
     district: str
     ward: str
-    notes: Optional[str] = None  
+    notes: Optional[str] = None
 
     items: List[CreateOrderItem]
 
@@ -43,6 +54,11 @@ class CreateOrder(BaseModel):
     discount_amount: Optional[int] = None
 
     total_amount: Optional[int] = None
+
+
+class UpdateOrder(BaseModel):
+    payment_status: Optional[PaymentStatus] = None
+    order_status: Optional[OrderStatus] = None
 
 
 class PayOSWebhookData(BaseModel):
@@ -77,6 +93,7 @@ class OrderResponse(BaseModel):
     order_code: int
 
     user_id: UUID
+    user: Any
 
     name: str
     email: str
@@ -99,7 +116,31 @@ class OrderResponse(BaseModel):
     order_status: OrderStatus
     total_amount: int
 
-    items: List[OrderItemResponse]
+    items: List[Any]
+
+    class Config:
+        from_attributes = True
+
+
+class OrderOverviewResponse(BaseModel):
+    total_orders: int
+    revenue: int
+    pending_count: int
+    cancelled_count: int
+
+
+class OrderHistoryResponse(BaseModel):
+    id: UUID
+    order_code: int
+    user_id: UUID
+    order_status: OrderStatus
+    payment_method: PaymentMethod
+    payment_status: PaymentStatus
+    city: str
+    total_amount: int
+    created_at: datetime
+
+    items: List[Any]
 
     class Config:
         from_attributes = True

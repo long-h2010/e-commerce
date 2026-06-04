@@ -1,3 +1,5 @@
+'use client';
+
 import { authService } from '@/services';
 import { useAuthStore } from '@/stores';
 import { LogoutOutlined, ShoppingOutlined, UserOutlined } from '@ant-design/icons';

@@ -6,8 +6,12 @@ from fastapi import HTTPException, status
 from app.repositories.category_repository import CategoryRepository
 from app.services.base_service import BaseService
 from app.core.enums.category import CategoryLevel
-from app.schemas.category_chema import BaseCategory, FindCategory, UpdateCategory
-
+from app.schemas.category_chema import (
+    BaseCategory,
+    FindCategory,
+    ProductCount,
+    UpdateCategory,
+)
 
 LEVEL_ORDER = {
     CategoryLevel.ROOT: 0,
@@ -163,3 +167,17 @@ class CategoryService(BaseService):
             ]
 
         return {cat_id: collect_leaves(cat_id) for cat_id in category_ids}
+
+    def count_product_in_roots_category(self):
+        count = []
+        result = self._repository.get_categories_with_product_count()
+
+        for r in result["founds"]:
+            if r["level"] == CategoryLevel.ROOT:
+                count.append(
+                    ProductCount(
+                        category=r["category"], product_count=r["product_count"]
+                    )
+                )
+
+        return count

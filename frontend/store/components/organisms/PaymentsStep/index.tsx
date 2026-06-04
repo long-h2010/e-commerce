@@ -62,7 +62,7 @@ export const PaymentsStep = ({
   };
 
   const handlePaymentSuccess = () => {
-    router.push(`/order-success?orderId=${orderId}`);
+    router.push(`/orders/${orderId}`);
   };
 
   return (

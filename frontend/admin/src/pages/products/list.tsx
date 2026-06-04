@@ -69,9 +69,6 @@ export const ProductList = () => {
   }, []);
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [statusFilter, setStatusFilter] = useState<ProductStatus | undefined>(
-    undefined,
-  );
 
   const { result: overviewData } = useCustom({
     url: import.meta.env.VITE_PRODUCTS_OVERVIEW_ENDPOINT,
@@ -99,26 +96,6 @@ export const ProductList = () => {
     syncWithLocation: false,
   });
 
-  const handleSearch = (value: string) => {
-    setFilters(
-      [{ field: 'keyword', operator: 'contains', value: value }],
-      'replace',
-    );
-  };
-
-  const handleStatusChange = (value: ProductStatus | undefined) => {
-    setStatusFilter(value);
-    if (value)
-      setFilters([{ field: 'status', operator: 'eq', value }], 'replace');
-    else setFilters([], 'replace');
-  };
-
-  const handleCategoryChange = (value: string) => {
-    if (value)
-      setFilters([{ field: 'categoryId', operator: 'eq', value }], 'replace');
-    else setFilters([], 'replace');
-  };
-
   return (
     <PageTemplate overview={overview}>
       <Card>
@@ -127,15 +104,30 @@ export const ProductList = () => {
             placeholder='Search by name'
             prefix={<SearchOutlined />}
             className='max-w-sm'
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) =>
+              setFilters([
+                {
+                  field: 'keyword',
+                  operator: 'contains',
+                  value: e.target.value || undefined,
+                },
+              ])
+            }
           />
           <div className='flex items-center gap-3'>
             <span className='uppercase text-xs'>Status: </span>
             <Select
               placeholder='Status'
               options={statusOptions}
-              value={statusFilter}
-              onChange={handleStatusChange}
+              onChange={(value) =>
+                setFilters([
+                  {
+                    field: 'status',
+                    value: value || undefined,
+                    operator: 'eq',
+                  },
+                ])
+              }
               className='min-w-[120px]'
             />
           </div>
@@ -145,7 +137,15 @@ export const ProductList = () => {
               placeholder='Category'
               treeData={categories}
               className='min-w-[250px] capitalize!'
-              onChange={handleCategoryChange}
+              onChange={(value) =>
+                setFilters([
+                  {
+                    field: 'categoryId',
+                    value: value || undefined,
+                    operator: 'eq',
+                  },
+                ])
+              }
             />
           </div>
         </div>
@@ -196,7 +196,9 @@ export const ProductList = () => {
         <Table.Column
           dataIndex={'visible'}
           title='Visible'
-          render={(value) => <Switch defaultChecked={value == 'public'} disabled />}
+          render={(value) => (
+            <Switch defaultChecked={value == 'public'} disabled />
+          )}
         />
         <Table.Column
           dataIndex={'purchases'}

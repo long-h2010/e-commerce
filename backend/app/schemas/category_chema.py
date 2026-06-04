@@ -38,3 +38,8 @@ class UpdateCategory(CreateCategory):
     @classmethod
     def to_lower(cls, value: Optional[str]) -> Optional[str]:
         return value.lower() if value else value
+
+
+class ProductCount(BaseModel):
+    category: str
+    product_count: int

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, List, Optional
 from uuid import UUID
 
@@ -28,6 +29,7 @@ class BaseProduct(BaseModel):
     sale_value: Optional[float] = None
     colors: Optional[List[BaseColor]] = None
     sizes: Optional[List[str]] = None
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -99,6 +101,7 @@ class FindProduct(FindBase):
     name: Optional[str] = None
     status: Optional[ProductStatus] = None
     visible: Optional[ProductVisibility] = None
+    category_name: Optional[str] = None
     category_id: Optional[UUID] = None
 
     category_id__in: Optional[List[UUID]] = None

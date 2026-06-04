@@ -34,6 +34,8 @@ export const dataProvider = (
         const f = camelToSnake(field);
 
         if (operator == 'eq') queryParams[f] = value;
+        else if (operator == 'gte') queryParams[`${f}__ge`] = value;
+        else if (operator == 'lte') queryParams[`${f}__le`] = value;
         else queryParams[f] = value;
       }
     });
@@ -139,7 +141,9 @@ export const dataProvider = (
       },
     });
 
-    return { data };
+    const transformData = transformKeysToCamelCase(data);
+
+    return { data: transformData.data || transformData };
   },
 
   getApiUrl: () => apiUrl,

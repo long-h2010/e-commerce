@@ -8,6 +8,7 @@ from app.services.base_service import BaseService
 from app.schemas.product_schema import (
     CreateProduct,
     DetailResponse,
+    FindProduct,
     ProductResponse,
     UpdateProduct,
 )
@@ -52,8 +53,20 @@ class ProductService(BaseService):
         return product
 
     async def get_list(
-        self, schema: Any, eagers=["thumbnail"], keyword_columns: list[str] = ["name"]
+        self,
+        schema: FindProduct,
+        eagers=["thumbnail"],
+        keyword_columns: list[str] = ["name"],
     ):
+        if schema.category_name:
+            category = self._category_service.get_by_field(
+                "category", schema.category_name
+            )
+            if category:
+                category_id__in = self._category_service.get_list_leaf_id(category.id)
+                schema.category_id__in = category_id__in
+                schema.category_name = None
+
         if getattr(schema, "category_id", None):
             category_id__in = self._category_service.get_list_leaf_id(
                 schema.category_id
@@ -66,13 +79,13 @@ class ProductService(BaseService):
             eagers=eagers,
             keyword_columns=keyword_columns,
         )
-        
+
         discount_map = await self._discount_service.build_discount_map()
 
         for p in result["founds"]:
             apply_discount = self._discount_service.apply_discount(p, discount_map)
             if apply_discount:
-                p["sale_value"] = apply_discount["sale_value"] 
+                p["sale_value"] = apply_discount["sale_value"]
 
         return FindResult(
             founds=[ProductResponse.model_validate(r) for r in result["founds"]],
@@ -84,11 +97,13 @@ class ProductService(BaseService):
         categories = self._category_service.get_list_parent(product.category)
 
         product_dict = product.model_dump()
-        product_dict["price"] = price 
-        
+        product_dict["price"] = price
+
         discount_map = await self._discount_service.build_discount_map()
 
-        apply_discount = self._discount_service.apply_discount(product_dict, discount_map)
+        apply_discount = self._discount_service.apply_discount(
+            product_dict, discount_map
+        )
         sale_value = None
         if apply_discount:
             sale_value = apply_discount["sale_value"]
@@ -132,4 +147,6 @@ class ProductService(BaseService):
         )
 
     def delete_by_id(self, id):
-        return self._repository.soft_delete(id)
+        return self._repository.delete_by_options(
+            id=id, logical_deletion=True, commit=True
+        )

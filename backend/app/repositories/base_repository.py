@@ -286,25 +286,6 @@ class BaseRepository:
 
             return {"message": "Deleted successful"}
 
-    def soft_delete(self, id: UUID):
-        with self._session_factory() as session:
-            obj = (
-                session.query(self._model)
-                .filter(self._model.id == id, self._model.deleted_at.is_(None))
-                .first()
-            )
-
-            if not obj:
-                raise NotFoundError(
-                    detail=f"not found id : {id}", error_code="ERR_BASE_001"
-                )
-
-            obj.deleted_at = datetime.now(timezone.utc)
-
-            session.commit()
-
-            return {"message": "Soft deleted successfully"}
-
     def delete_by_options(
         self,
         allow_multiple: bool = False,

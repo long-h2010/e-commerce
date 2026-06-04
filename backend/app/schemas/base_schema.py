@@ -25,13 +25,13 @@ class FindBase(BaseModel):
     def validate_sort_columns(cls, value: Optional[str]) -> Optional[List[str]]:
         if not value:
             return None
-        
+
         if isinstance(value, str):
             return value.split(",")
-        
+
         if isinstance(value, list):
             return value
-        
+
         return None
 
 
@@ -45,3 +45,8 @@ class FindResult(BaseModel):
 
 
 class Blank(BaseResponse): ...
+
+
+class OverviewGrowthResponse(BaseModel):
+    total: int
+    growth: float

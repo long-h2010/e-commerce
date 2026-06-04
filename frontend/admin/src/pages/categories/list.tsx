@@ -1,5 +1,6 @@
 import { CategoryPath } from '@/components/molecules';
 import { AddCategoryDrawer } from '@/components/organisms';
+import { PageTemplate } from '@/components/templates';
 import { buildTreeData, formatDate } from '@/lib/utils';
 import { useHeaderStore } from '@/stores';
 import { Category, CategoryLevel } from '@/types/category';
@@ -61,9 +62,9 @@ export const CategoryList = () => {
   useEffect(() => {
     setState('Create', 'plus', () => setOpenAddCategory(true));
   }, []);
-  
+
   return (
-    <div>
+    <PageTemplate>
       <Table
         {...tableProps}
         dataSource={categoriesTree}
@@ -86,7 +87,9 @@ export const CategoryList = () => {
                   size='small'
                   className='max-w-[200px]'
                   onChange={(e) =>
-                    setEditing((s) => (s ? { ...s, category: e.target.value } : s))
+                    setEditing((s) =>
+                      s ? { ...s, category: e.target.value } : s,
+                    )
                   }
                 />
               );
@@ -194,6 +197,6 @@ export const CategoryList = () => {
         setOpen={setOpenAddCategory}
         parentCategoriesOptions={optionsTree}
       />
-    </div>
+    </PageTemplate>
   );
 };

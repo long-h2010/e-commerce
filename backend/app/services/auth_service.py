@@ -33,7 +33,7 @@ class AuthService(BaseService):
             )
 
         if not user.is_active:
-            raise AuthError(detail="Account is not active")
+            raise AuthError(detail="Account has been banned")
 
         delattr(user, "password")
 

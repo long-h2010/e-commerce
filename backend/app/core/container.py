@@ -31,6 +31,7 @@ from app.services.cart_service import CartService
 from app.services.cart_item_service import CartItemService
 from app.services.order_service import OrderService
 from app.services.order_item_service import OrderItemService
+from app.services.dashboard_service import DashboardService
 
 endpoint_path = "app.api.v1.endpoints."
 
@@ -48,6 +49,7 @@ class Container(containers.DeclarativeContainer):
             endpoint_path + "discounts",
             endpoint_path + "carts",
             endpoint_path + "orders",
+            endpoint_path + "dashboard",
         ]
     )
 
@@ -145,4 +147,13 @@ class Container(containers.DeclarativeContainer):
         item_service=order_item_service,
         variant_service=product_variant_service,
         discount_service=discount_service,
+        cart_service=cart_service,
+    )
+    dashboard_service = providers.Factory(
+        DashboardService,
+        product_service=product_service,
+        order_service=order_service,
+        user_service=user_service,
+        discount_service=discount_service,
+        category_service=category_service,
     )

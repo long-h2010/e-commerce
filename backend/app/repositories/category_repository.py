@@ -16,7 +16,34 @@ class CategoryRepository(BaseRepository):
         self.session_factory = session_factory
         super().__init__(session_factory, Category)
 
-    def get_categories_with_product_count(self, schema: Any) -> dict:
+    def aggregate_count_by_level(self, categories: Any) -> dict:
+        category_map = {category["id"]: category for category in categories}
+
+        children_map = {}
+
+        for category in categories:
+            parent_id = category["parent_id"]
+            if parent_id:
+                children_map.setdefault(parent_id, []).append(category)
+
+        def calculate_counts(category_id: UUID) -> int:
+            category = category_map[category_id]
+            total = category["product_count"]
+
+            for child in children_map.get(category_id, []):
+                total += calculate_counts(child["id"])
+
+            category["product_count"] = total
+
+            return total
+        
+        roots = [category for category in categories if not category["parent_id"]]
+        for root in roots:
+            calculate_counts(root["id"])
+
+        return categories
+
+    def get_categories_with_product_count(self) -> dict:
         products = table(
             "products",
             column("id"),
@@ -55,6 +82,8 @@ class CategoryRepository(BaseRepository):
                 }
                 for category, product_count in results
             ]
+
+            founds = self.aggregate_count_by_level(founds)
 
             return {
                 "founds": founds,

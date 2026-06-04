@@ -1,8 +1,9 @@
-from typing import List, Optional
+from typing import Any, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.schemas.base_schema import ModelBaseInfo, SearchOptions
+from app.schemas.base_schema import FindBase, ModelBaseInfo, SearchOptions
 from app.core.enums.user import UserRole
 
 
@@ -29,6 +30,15 @@ class FindUserAuth(BaseModel):
     username: str
 
 
-class FindUserResult(BaseModel):
-    founds: Optional[List[User]]
-    search_options: Optional[SearchOptions]
+class FindUser(FindBase): ...
+
+
+class UpdateUser(BaseModel):
+    is_active: Optional[bool] = None
+    password: Optional[str] = None
+
+
+class UserResponse(BaseUser):
+    id: UUID
+    username: str
+    orders: Optional[List[Any]] = None

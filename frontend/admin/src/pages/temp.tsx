@@ -1,655 +1,264 @@
-import { useState, useMemo } from 'react';
-import {
-  Layout,
-  Menu,
-  Button,
-  Space,
-  Typography,
-  Card,
-  Row,
-  Col,
-  Avatar,
-  ConfigProvider,
-  theme,
-  Breadcrumb,
-  Table,
-  Input,
-  Popconfirm,
-  Tag,
-  Tooltip,
-  message,
-  Badge,
-  Empty,
-  Select,
-  Drawer,
-  Form,
-  Switch,
-  Divider,
-  DatePicker,
-  InputNumber,
-  Progress,
-  Tabs,
-  Statistic,
-  Alert,
-  Segmented,
-  Modal,
-  Checkbox,
-  Transfer,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import type { TransferDirection } from 'antd/es/transfer';
-import dayjs, { Dayjs } from 'dayjs';
 import {
   AppstoreOutlined,
+  ArrowDownOutlined,
+  ArrowUpOutlined,
   BarChartOutlined,
-  ShoppingOutlined,
-  SettingOutlined,
-  HomeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  TagOutlined,
-  ThunderboltOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  PauseCircleOutlined,
-  StopOutlined,
-  FireOutlined,
-  GiftOutlined,
-  PercentageOutlined,
+  BgColorsOutlined,
   DollarOutlined,
-  CopyOutlined,
-  EyeOutlined,
+  FireOutlined,
+  HomeOutlined,
+  RiseOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+  TagsOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
+import { Area, Bar, Column, Pie } from '@ant-design/charts';
+import {
+  Avatar,
+  Badge,
+  Breadcrumb,
+  Card,
+  Col,
+  ConfigProvider,
+  Layout,
+  List,
+  Menu,
+  Progress,
+  Row,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  theme,
+} from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { useState } from 'react';
 
 const { Sider, Content, Header } = Layout;
-const { Text, Title } = Typography;
-const { RangePicker } = DatePicker;
+const { Text } = Typography;
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-type DiscountType = 'percentage' | 'fixed' | 'buy_x_get_y';
-type SaleStatus = 'active' | 'scheduled' | 'ended' | 'paused';
-type AppliesTo = 'all' | 'categories' | 'products';
+// ── Fake data ──────────────────────────────────────────────────────────────────
+const MONTHLY_DATA = [
+  { month: 'Jan', revenue: 42000000, orders: 210 },
+  { month: 'Feb', revenue: 38000000, orders: 190 },
+  { month: 'Mar', revenue: 55000000, orders: 275 },
+  { month: 'Apr', revenue: 49000000, orders: 245 },
+  { month: 'May', revenue: 63000000, orders: 315 },
+  { month: 'Jun', revenue: 71000000, orders: 355 },
+  { month: 'Jul', revenue: 58000000, orders: 290 },
+  { month: 'Aug', revenue: 82000000, orders: 410 },
+  { month: 'Sep', revenue: 76000000, orders: 380 },
+  { month: 'Oct', revenue: 91000000, orders: 455 },
+  { month: 'Nov', revenue: 105000000, orders: 525 },
+  { month: 'Dec', revenue: 124000000, orders: 620 },
+];
 
-interface SaleItem {
-  id: number;
-  name: string;
-  code: string;
-  type: DiscountType;
-  value: number; // % or fixed $
-  buyX?: number;
-  getY?: number;
-  status: SaleStatus;
-  appliesTo: AppliesTo;
-  targets: string[]; // category/product names
-  minOrder: number;
-  usageLimit: number | null;
-  usageCount: number;
-  startDate: string;
-  endDate: string;
-  revenue: number;
-  orders: number;
-}
+const WEEKLY_DATA = [
+  { day: 'Mon', revenue: 8200000,  orders: 41  },
+  { day: 'Tue', revenue: 11400000, orders: 57  },
+  { day: 'Wed', revenue: 9800000,  orders: 49  },
+  { day: 'Thu', revenue: 14200000, orders: 71  },
+  { day: 'Fri', revenue: 17600000, orders: 88  },
+  { day: 'Sat', revenue: 21000000, orders: 105 },
+  { day: 'Sun', revenue: 15800000, orders: 79  },
+];
+
+// For Area chart — dual series using G2/AntD format (series column)
+const toAreaSeries = (data: typeof MONTHLY_DATA, xKey: string) => [
+  ...data.map(d => ({ x: (d as any)[xKey], value: d.revenue,  type: 'Revenue' })),
+  ...data.map(d => ({ x: (d as any)[xKey], value: d.orders,   type: 'Orders'  })),
+];
+
+const CATEGORY_PIE = [
+  { type: 'Tops',        value: 32 },
+  { type: 'Bottoms',     value: 24 },
+  { type: 'Outerwear',   value: 18 },
+  { type: 'Dresses',     value: 14 },
+  { type: 'Accessories', value: 8  },
+  { type: 'Footwear',    value: 4  },
+];
+
+const TOP_PRODUCTS = [
+  { id: 1, name: 'Wool Cocoon Coat',       category: 'Outerwear',   sold: 137, revenue: 27126000, emoji: '🧥', trend: 'up'   },
+  { id: 2, name: 'Boxy Graphic Tee',       category: 'Tops',        sold: 98,  revenue: 3430000,  emoji: '👕', trend: 'up'   },
+  { id: 3, name: 'Barrel Leg Jean',        category: 'Bottoms',     sold: 84,  revenue: 7980000,  emoji: '👖', trend: 'down' },
+  { id: 4, name: 'Platform Chelsea Boot',  category: 'Footwear',    sold: 71,  revenue: 10295000, emoji: '👢', trend: 'up'   },
+  { id: 5, name: 'Slip Midi Dress',        category: 'Dresses',     sold: 68,  revenue: 6052000,  emoji: '👗', trend: 'up'   },
+];
+
+const RECENT_ORDERS = [
+  { id: '#ORD-2841', customer: 'Linh Nguyen', amount: 4630000, status: 'shipping',  date: '20 Jun 2025' },
+  { id: '#ORD-2840', customer: 'Mai Tran',    amount: 1980000, status: 'delivered', date: '20 Jun 2025' },
+  { id: '#ORD-2839', customer: 'An Pham',     amount: 7200000, status: 'confirmed', date: '19 Jun 2025' },
+  { id: '#ORD-2838', customer: 'Thu Hoang',   amount: 2450000, status: 'pending',   date: '19 Jun 2025' },
+  { id: '#ORD-2837', customer: 'Duc Le',      amount: 890000,  status: 'cancelled', date: '18 Jun 2025' },
+];
+
+const LOW_STOCK = [
+  { name: 'Ribbed Turtleneck',   sku: 'TOP-003', stock: 0,  emoji: '🧶' },
+  { name: 'Quilted Puffer Vest', sku: 'OUT-010', stock: 0,  emoji: '🦺' },
+  { name: 'Barrel Leg Jean',     sku: 'BOT-008', stock: 3,  emoji: '👖' },
+  { name: 'Chelsea Boot',        sku: 'FTW-007', stock: 8,  emoji: '👢' },
+  { name: 'Blazer-Dress',        sku: 'DRS-014', stock: 6,  emoji: '🥻' },
+];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-let nextId = 10;
+const formatVND = (v: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 
-const STATUS_META: Record<
-  SaleStatus,
-  { color: string; badge: any; icon: React.ReactNode; label: string }
-> = {
-  active: {
-    color: '#52c41a',
-    badge: 'success',
-    icon: <CheckCircleOutlined />,
-    label: 'Active',
-  },
-  scheduled: {
-    color: '#1677ff',
-    badge: 'processing',
-    icon: <ClockCircleOutlined />,
-    label: 'Scheduled',
-  },
-  ended: {
-    color: '#aaa',
-    badge: 'default',
-    icon: <StopOutlined />,
-    label: 'Ended',
-  },
-  paused: {
-    color: '#fa8c16',
-    badge: 'warning',
-    icon: <PauseCircleOutlined />,
-    label: 'Paused',
-  },
+const shortenVND = (v: number) => {
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
+  if (v >= 1_000_000)     return `${(v / 1_000_000).toFixed(0)}M`;
+  return `${(v / 1_000).toFixed(0)}K`;
 };
 
-const TYPE_META: Record<
-  DiscountType,
-  { icon: React.ReactNode; label: string; color: string }
-> = {
-  percentage: {
-    icon: <PercentageOutlined />,
-    label: '% Off',
-    color: '#d4380d',
-  },
-  fixed: { icon: <DollarOutlined />, label: 'Fixed Amount', color: '#1677ff' },
-  buy_x_get_y: {
-    icon: <GiftOutlined />,
-    label: 'Buy X Get Y',
-    color: '#722ed1',
-  },
+const ORDER_STATUS_COLOR: Record<string, string> = {
+  pending:   'gold',
+  confirmed: 'blue',
+  shipping:  'cyan',
+  delivered: 'green',
+  cancelled: 'red',
 };
 
-function formatDiscount(item: SaleItem) {
-  if (item.type === 'percentage') return `${item.value}% off`;
-  if (item.type === 'fixed') return `$${item.value} off`;
-  if (item.type === 'buy_x_get_y') return `Buy ${item.buyX} Get ${item.getY}`;
-  return '—';
-}
+const PIE_COLORS = ['#1d1d1d','#4a5568','#718096','#a0aec0','#cbd5e0','#e2e8f0'];
 
-function computeStatus(item: SaleItem): SaleStatus {
-  const now = dayjs();
-  const start = dayjs(item.startDate, 'DD MMM YYYY');
-  const end = dayjs(item.endDate, 'DD MMM YYYY');
-  if (item.status === 'paused') return 'paused';
-  if (now.isBefore(start)) return 'scheduled';
-  if (now.isAfter(end)) return 'ended';
-  return 'active';
-}
-
-// ── Seed data ──────────────────────────────────────────────────────────────────
-const SEED: SaleItem[] = [
-  {
-    id: 1,
-    name: 'Summer Clearance',
-    code: 'SUMMER30',
-    type: 'percentage',
-    value: 30,
-    status: 'active',
-    appliesTo: 'all',
-    targets: [],
-    minOrder: 0,
-    usageLimit: null,
-    usageCount: 214,
-    startDate: '01 Jun 2025',
-    endDate: '31 Jul 2025',
-    revenue: 18420,
-    orders: 214,
-  },
-  {
-    id: 2,
-    name: 'New Member Promo',
-    code: 'WELCOME15',
-    type: 'percentage',
-    value: 15,
-    status: 'active',
-    appliesTo: 'all',
-    targets: [],
-    minOrder: 50,
-    usageLimit: 500,
-    usageCount: 187,
-    startDate: '01 Jan 2025',
-    endDate: '31 Dec 2025',
-    revenue: 9310,
-    orders: 187,
-  },
-  {
-    id: 3,
-    name: 'Flash Sale — Coats',
-    code: 'COAT50',
-    type: 'fixed',
-    value: 50,
-    status: 'active',
-    appliesTo: 'categories',
-    targets: ['Outerwear'],
-    minOrder: 150,
-    usageLimit: 100,
-    usageCount: 67,
-    startDate: '15 Jun 2025',
-    endDate: '20 Jun 2025',
-    revenue: 5360,
-    orders: 67,
-  },
-  {
-    id: 4,
-    name: 'Buy 2 Get 1 Free',
-    code: 'BUY2GET1',
-    type: 'buy_x_get_y',
-    value: 0,
-    buyX: 2,
-    getY: 1,
-    status: 'active',
-    appliesTo: 'categories',
-    targets: ['Tops', 'Dresses'],
-    minOrder: 0,
-    usageLimit: null,
-    usageCount: 43,
-    startDate: '10 Jun 2025',
-    endDate: '30 Jun 2025',
-    revenue: 3870,
-    orders: 43,
-  },
-  {
-    id: 5,
-    name: 'VIP Weekend',
-    code: 'VIP20',
-    type: 'percentage',
-    value: 20,
-    status: 'paused',
-    appliesTo: 'all',
-    targets: [],
-    minOrder: 100,
-    usageLimit: 200,
-    usageCount: 89,
-    startDate: '01 May 2025',
-    endDate: '03 May 2025',
-    revenue: 7240,
-    orders: 89,
-  },
-  {
-    id: 6,
-    name: 'Autumn Preview',
-    code: 'AUTUMN10',
-    type: 'percentage',
-    value: 10,
-    status: 'scheduled',
-    appliesTo: 'categories',
-    targets: ['Outerwear', 'Knitwear'],
-    minOrder: 0,
-    usageLimit: null,
-    usageCount: 0,
-    startDate: '01 Sep 2025',
-    endDate: '30 Sep 2025',
-    revenue: 0,
-    orders: 0,
-  },
-  {
-    id: 7,
-    name: 'End of Season',
-    code: 'EOS40',
-    type: 'percentage',
-    value: 40,
-    status: 'ended',
-    appliesTo: 'all',
-    targets: [],
-    minOrder: 0,
-    usageLimit: null,
-    usageCount: 521,
-    startDate: '01 Jan 2025',
-    endDate: '28 Feb 2025',
-    revenue: 41680,
-    orders: 521,
-  },
-  {
-    id: 8,
-    name: 'Accessories $5 Off',
-    code: 'ACC5',
-    type: 'fixed',
-    value: 5,
-    status: 'ended',
-    appliesTo: 'categories',
-    targets: ['Accessories'],
-    minOrder: 30,
-    usageLimit: 300,
-    usageCount: 300,
-    startDate: '15 Mar 2025',
-    endDate: '15 Apr 2025',
-    revenue: 2190,
-    orders: 300,
-  },
-];
-
-const ALL_PRODUCTS = [
-  'Wool Cocoon Coat',
-  'Linen Oversized Shirt',
-  'Slip Midi Dress',
-  'Barrel Leg Jean',
-  'Platform Chelsea Boot',
-  'Structured Tote',
-  'Ribbed Turtleneck',
-  'Boxy Graphic Tee',
-  'Cashmere Scarf',
-  'Leather Belt',
-];
-const ALL_CATEGORIES = [
-  'Tops',
-  'Bottoms',
-  'Outerwear',
-  'Dresses',
-  'Accessories',
-  'Footwear',
-];
+const AVATAR_COLORS = ['#1d1d1d','#2c3e50','#3d3530','#4a5568','#3d5a80'];
 
 const NAV_ITEMS = [
-  { key: 'home', icon: <HomeOutlined />, label: 'Dashboard' },
-  { key: 'products', icon: <ShoppingOutlined />, label: 'Products' },
-  { key: 'sales', icon: <TagOutlined />, label: 'Sales' },
-  { key: 'orders', icon: <AppstoreOutlined />, label: 'Orders' },
-  { key: 'stats', icon: <BarChartOutlined />, label: 'Analytics' },
-  { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
+  { key: 'home',     icon: <HomeOutlined />,     label: 'Dashboard' },
+  { key: 'products', icon: <ShoppingOutlined />, label: 'Products'  },
+  { key: 'orders',   icon: <AppstoreOutlined />, label: 'Orders'    },
+  { key: 'users',    icon: <UserOutlined />,      label: 'Users'     },
+  { key: 'colors',   icon: <BgColorsOutlined />, label: 'Colors'    },
+  { key: 'cats',     icon: <TagsOutlined />,      label: 'Categories'},
+  { key: 'stats',    icon: <BarChartOutlined />, label: 'Analytics' },
+  { key: 'settings', icon: <SettingOutlined />,  label: 'Settings'  },
+];
+
+const productColumns: ColumnsType<typeof TOP_PRODUCTS[0]> = [
+  {
+    title: '#',
+    width: 28,
+    render: (_: any, __: any, i: number) => (
+      <Text type="secondary" style={{ fontSize: 12 }}>{i + 1}</Text>
+    ),
+  },
+  {
+    title: 'Product',
+    render: (_: any, r: any) => (
+      <Space>
+        <Avatar size={32} shape="square" style={{ background: '#f5f5f5', fontSize: 18 }}>{r.emoji}</Avatar>
+        <Space direction="vertical" size={0}>
+          <Text style={{ fontSize: 13, fontWeight: 500 }}>{r.name}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>{r.category}</Text>
+        </Space>
+      </Space>
+    ),
+  },
+  {
+    title: 'Sold',
+    dataIndex: 'sold',
+    width: 60,
+    render: (v: number) => <Text strong>{v}</Text>,
+  },
+  {
+    title: 'Revenue',
+    dataIndex: 'revenue',
+    width: 130,
+    render: (v: number) => <Text strong style={{ fontSize: 13 }}>{formatVND(v)}</Text>,
+  },
+  {
+    title: '',
+    width: 40,
+    render: (_: any, r: any) => r.trend === 'up'
+      ? <ArrowUpOutlined style={{ color: '#52c41a' }} />
+      : <ArrowDownOutlined style={{ color: '#ff4d4f' }} />,
+  },
 ];
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function Temp() {
-  const [sales, setSales] = useState<SaleItem[]>(SEED);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatus] = useState<SaleStatus | 'all'>('all');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editItem, setEditItem] = useState<SaleItem | null>(null);
-  const [previewItem, setPreview] = useState<SaleItem | null>(null);
-  const [form] = Form.useForm();
-  const [messageApi, ctx] = message.useMessage();
-  const [discountType, setDiscountType] = useState<DiscountType>('percentage');
-  const [appliesTo, setAppliesTo] = useState<AppliesTo>('all');
+  const [period, setPeriod] = useState<'monthly' | 'weekly'>('monthly');
 
-  // ── Derived ──
-  const withStatus = useMemo(
-    () => sales.map((s) => ({ ...s, status: computeStatus(s) })),
-    [sales],
-  );
+  const rawData   = period === 'monthly' ? MONTHLY_DATA : WEEKLY_DATA;
+  const xKey      = period === 'monthly' ? 'month' : 'day';
+  const areaSeries = toAreaSeries(rawData, xKey);
 
-  const filtered = useMemo(
-    () =>
-      withStatus
-        .filter((s) => statusFilter === 'all' || s.status === statusFilter)
-        .filter(
-          (s) =>
-            s.name.toLowerCase().includes(search.toLowerCase()) ||
-            s.code.toLowerCase().includes(search.toLowerCase()),
-        ),
-    [withStatus, statusFilter, search],
-  );
+  const totalRevenue  = MONTHLY_DATA.reduce((s, d) => s + d.revenue, 0);
+  const totalOrders   = MONTHLY_DATA.reduce((s, d) => s + d.orders, 0);
+  const avgOrderValue = totalRevenue / totalOrders;
 
-  // ── Stats ──
-  const active = withStatus.filter((s) => s.status === 'active');
-  const totalRev = withStatus.reduce((a, s) => a + s.revenue, 0);
-  const totalOrds = withStatus.reduce((a, s) => a + s.orders, 0);
-
-  // ── Actions ──
-  const openCreate = () => {
-    setEditItem(null);
-    form.resetFields();
-    form.setFieldsValue({
-      type: 'percentage',
-      appliesTo: 'all',
-      visible: true,
-    });
-    setDiscountType('percentage');
-    setAppliesTo('all');
-    setDrawerOpen(true);
-  };
-
-  const openEdit = (item: SaleItem) => {
-    setEditItem(item);
-    form.setFieldsValue({
-      ...item,
-      dateRange: [
-        dayjs(item.startDate, 'DD MMM YYYY'),
-        dayjs(item.endDate, 'DD MMM YYYY'),
-      ],
-    });
-    setDiscountType(item.type);
-    setAppliesTo(item.appliesTo);
-    setDrawerOpen(true);
-  };
-
-  const handleSave = () => {
-    form.validateFields().then((values) => {
-      const [start, end] = values.dateRange as [Dayjs, Dayjs];
-      const base = {
-        name: values.name,
-        code: values.code.toUpperCase(),
-        type: values.type,
-        value: values.value ?? 0,
-        buyX: values.buyX,
-        getY: values.getY,
-        appliesTo: values.appliesTo,
-        targets: values.targets ?? [],
-        minOrder: values.minOrder ?? 0,
-        usageLimit: values.usageLimit ?? null,
-        startDate: start.format('DD MMM YYYY'),
-        endDate: end.format('DD MMM YYYY'),
-        status: 'active' as SaleStatus,
-      };
-      if (editItem) {
-        setSales((prev) =>
-          prev.map((s) => (s.id === editItem.id ? { ...s, ...base } : s)),
-        );
-        messageApi.success('Sale updated.');
-      } else {
-        const newSale: SaleItem = {
-          id: nextId++,
-          ...base,
-          usageCount: 0,
-          revenue: 0,
-          orders: 0,
-        };
-        setSales((prev) => [newSale, ...prev]);
-        messageApi.success('Sale created.');
-      }
-      setDrawerOpen(false);
-    });
-  };
-
-  const deleteSale = (id: number) => {
-    setSales((prev) => prev.filter((s) => s.id !== id));
-    messageApi.success('Sale deleted.');
-  };
-
-  const togglePause = (item: SaleItem) => {
-    setSales((prev) =>
-      prev.map((s) =>
-        s.id === item.id
-          ? { ...s, status: s.status === 'paused' ? 'active' : 'paused' }
-          : s,
-      ),
-    );
-    messageApi.info(
-      item.status === 'paused' ? 'Sale resumed.' : 'Sale paused.',
-    );
-  };
-
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code).catch(() => {});
-    messageApi.success(`Copied "${code}"`);
-  };
-
-  // ── Columns ──
-  const columns: ColumnsType<SaleItem> = [
-    {
-      title: 'Sale',
-      render: (_, r) => (
-        <Space direction='vertical' size={2}>
-          <Space>
-            <Text strong style={{ fontSize: 14 }}>
-              {r.name}
-            </Text>
-            {r.usageLimit && r.usageCount >= r.usageLimit && (
-              <Tag color='red' style={{ fontSize: 10 }}>
-                Limit reached
-              </Tag>
-            )}
-          </Space>
-          <Space size={6}>
-            <Tag
-              icon={TYPE_META[r.type].icon}
-              style={{
-                fontSize: 11,
-                color: TYPE_META[r.type].color,
-                background: `${TYPE_META[r.type].color}14`,
-                border: `1px solid ${TYPE_META[r.type].color}30`,
-              }}
-            >
-              {formatDiscount(r)}
-            </Tag>
-            <Tooltip title='Copy code'>
-              <Tag
-                style={{
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  letterSpacing: '.06em',
-                }}
-                icon={<CopyOutlined />}
-                onClick={() => copyCode(r.code)}
-              >
-                {r.code}
-              </Tag>
-            </Tooltip>
-          </Space>
-        </Space>
-      ),
+  // ── Chart configs ──
+  const areaConfig = {
+    data: areaSeries,
+    xField: 'x',
+    yField: 'value',
+    seriesField: 'type',
+    smooth: true,
+    height: 240,
+    color: ['#1d1d1d', '#1677ff'],
+    areaStyle: { fillOpacity: 0.08 },
+    legend: { position: 'top-right' as const },
+    xAxis: { grid: null, line: null, label: { style: { fill: '#aaa', fontSize: 11 } } },
+    yAxis: {
+      label: {
+        formatter: (v: string) => {
+          const n = Number(v);
+          return n > 1000 ? shortenVND(n) : v;
+        },
+        style: { fill: '#aaa', fontSize: 11 },
+      },
+      grid: { line: { style: { stroke: '#f0f0f0' } } },
     },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      width: 110,
-      render: (status: SaleStatus) => (
-        <Badge
-          status={STATUS_META[status].badge}
-          text={
-            <Text
-              style={{
-                fontSize: 13,
-                color: STATUS_META[status].color,
-                fontWeight: 500,
-              }}
-            >
-              {STATUS_META[status].label}
-            </Text>
-          }
-        />
-      ),
+    tooltip: {
+      formatter: (d: any) => ({
+        name:  d.type,
+        value: d.type === 'Revenue' ? `${shortenVND(d.value)} ₫` : d.value,
+      }),
     },
-    {
-      title: 'Period',
-      width: 190,
-      render: (_, r) => {
-        const start = dayjs(r.startDate, 'DD MMM YYYY');
-        const end = dayjs(r.endDate, 'DD MMM YYYY');
-        const now = dayjs();
-        const total = end.diff(start, 'day') || 1;
-        const elapsed = Math.min(Math.max(now.diff(start, 'day'), 0), total);
-        const pct = Math.round((elapsed / total) * 100);
-        return (
-          <Space direction='vertical' size={4} style={{ width: '100%' }}>
-            <Text style={{ fontSize: 12, color: '#888' }}>
-              {r.startDate} → {r.endDate}
-            </Text>
-            {r.status === 'active' && (
-              <Progress
-                percent={pct}
-                size='small'
-                showInfo={false}
-                strokeColor='#1d1d1d'
-              />
-            )}
-          </Space>
-        );
+    animation: { appear: { animation: 'wave-in', duration: 600 } },
+  };
+
+  const columnConfig = {
+    data: WEEKLY_DATA,
+    xField: 'day',
+    yField: 'orders',
+    height: 200,
+    color: ({ day }: any) => day === 'Sat' ? '#1d1d1d' : '#e0e0e0',
+    columnStyle: { radius: [4, 4, 0, 0] },
+    label: { position: 'top' as const, style: { fill: '#aaa', fontSize: 11 } },
+    xAxis: { line: null, label: { style: { fill: '#aaa', fontSize: 12 } } },
+    yAxis: {
+      grid: { line: { style: { stroke: '#f0f0f0' } } },
+      label: { style: { fill: '#aaa', fontSize: 11 } },
+    },
+    tooltip: { formatter: (d: any) => ({ name: 'Orders', value: d.orders }) },
+    animation: { appear: { animation: 'grow-in-y', duration: 500 } },
+  };
+
+  const pieConfig = {
+    data: CATEGORY_PIE,
+    angleField: 'value',
+    colorField: 'type',
+    radius: 1,
+    innerRadius: 0.65,
+    height: 180,
+    color: PIE_COLORS,
+    label: false as const,
+    legend: false as const,
+    statistic: {
+      title: false as const,
+      content: {
+        style: { fontSize: '14px', fontWeight: 600, color: '#1d1d1d' },
+        content: 'Category',
       },
     },
-    {
-      title: 'Applies To',
-      width: 160,
-      render: (_, r) => (
-        <Space size={4} wrap>
-          {r.appliesTo === 'all' ? (
-            <Tag>All Products</Tag>
-          ) : (
-            r.targets.map((t) => <Tag key={t}>{t}</Tag>)
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: 'Min. Order',
-      dataIndex: 'minOrder',
-      width: 100,
-      render: (v: number) =>
-        v > 0 ? <Text>${v}</Text> : <Text type='secondary'>—</Text>,
-    },
-    {
-      title: 'Usage',
-      width: 120,
-      render: (_, r) => (
-        <Space direction='vertical' size={2}>
-          <Text style={{ fontSize: 13 }}>
-            {r.usageCount.toLocaleString()}
-            {r.usageLimit ? (
-              <Text type='secondary'> / {r.usageLimit}</Text>
-            ) : (
-              ''
-            )}
-          </Text>
-          {r.usageLimit && (
-            <Progress
-              percent={Math.round((r.usageCount / r.usageLimit) * 100)}
-              size='small'
-              showInfo={false}
-              strokeColor={r.usageCount >= r.usageLimit ? '#ff4d4f' : '#52c41a'}
-            />
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: 'Revenue',
-      dataIndex: 'revenue',
-      width: 100,
-      sorter: (a, b) => a.revenue - b.revenue,
-      render: (v: number) => <Text strong>${v.toLocaleString()}</Text>,
-    },
-    {
-      title: 'Action',
-      width: 130,
-      render: (_, r) => (
-        <Space size={4}>
-          <Tooltip title='Preview'>
-            <Button
-              type='text'
-              size='small'
-              icon={<EyeOutlined />}
-              onClick={() => setPreview(r)}
-            />
-          </Tooltip>
-          <Tooltip title='Edit'>
-            <Button
-              type='text'
-              size='small'
-              icon={<EditOutlined />}
-              onClick={() => openEdit(r)}
-            />
-          </Tooltip>
-          <Tooltip title={r.status === 'paused' ? 'Resume' : 'Pause'}>
-            <Button
-              type='text'
-              size='small'
-              icon={
-                r.status === 'paused' ? (
-                  <CheckCircleOutlined />
-                ) : (
-                  <PauseCircleOutlined />
-                )
-              }
-              onClick={() => togglePause(r)}
-              disabled={r.status === 'ended'}
-            />
-          </Tooltip>
-          <Popconfirm
-            title={`Delete "${r.name}"?`}
-            okText='Delete'
-            cancelText='No'
-            okButtonProps={{ danger: true }}
-            onConfirm={() => deleteSale(r.id)}
-          >
-            <Button type='text' size='small' danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+    tooltip: { formatter: (d: any) => ({ name: d.type, value: `${d.value}%` }) },
+    animation: { appear: { animation: 'wave-in', duration: 600 } },
+  };
 
   return (
     <ConfigProvider
@@ -661,720 +270,210 @@ export default function Temp() {
           fontFamily: "'DM Sans', sans-serif",
         },
         components: {
-          Menu: { itemSelectedBg: '#f5f5f5', itemSelectedColor: '#1d1d1d' },
+          Menu:  { itemSelectedBg: '#f5f5f5', itemSelectedColor: '#1d1d1d' },
           Table: { headerBg: '#fafafa' },
-          Tabs: { inkBarColor: '#1d1d1d', itemSelectedColor: '#1d1d1d' },
         },
       }}
     >
-      {ctx}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
 
       <Layout style={{ minHeight: '100vh' }}>
+
         {/* Sider */}
-        <Sider
-          width={220}
-          style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
-        >
-          <div
-            style={{
-              padding: '20px 20px 16px',
-              borderBottom: '1px solid #f5f5f5',
-            }}
-          >
+        <Sider width={220} style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}>
+          <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f5f5f5' }}>
             <Space>
-              <Avatar
-                size={32}
-                style={{ background: '#1d1d1d', fontWeight: 700, fontSize: 13 }}
-              >
-                É
-              </Avatar>
-              <Text strong style={{ fontSize: 15 }}>
-                Éclat Studio
-              </Text>
+              <Avatar size={32} style={{ background: '#1d1d1d', fontWeight: 700, fontSize: 13 }}>É</Avatar>
+              <Text strong style={{ fontSize: 15 }}>Éclat Studio</Text>
             </Space>
           </div>
-          <Menu
-            mode='inline'
-            defaultSelectedKeys={['sales']}
-            style={{ border: 'none', marginTop: 8 }}
-            items={NAV_ITEMS}
-          />
+          <Menu mode="inline" defaultSelectedKeys={['home']} style={{ border: 'none', marginTop: 8 }} items={NAV_ITEMS} />
         </Sider>
 
         <Layout>
           {/* Header */}
-          <Header
-            style={{
-              background: '#fff',
-              padding: '0 24px',
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
+          <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Space>
-              <TagOutlined style={{ fontSize: 18, color: '#888' }} />
-              <Breadcrumb
-                items={[{ title: 'Marketing' }, { title: 'Sales & Discounts' }]}
-              />
+              <BarChartOutlined style={{ fontSize: 18, color: '#888' }} />
+              <Breadcrumb items={[{ title: 'Éclat Studio' }, { title: 'Dashboard' }]} />
             </Space>
-            <Button
-              type='primary'
-              icon={<PlusOutlined />}
-              onClick={openCreate}
-              style={{ background: '#1d1d1d', borderColor: '#1d1d1d' }}
-            >
-              New Sale
-            </Button>
+            <Space>
+              <Text type="secondary" style={{ fontSize: 13 }}>Jun 20, 2025</Text>
+              <Avatar size={32} style={{ background: '#1d1d1d', fontSize: 12 }}>AD</Avatar>
+            </Space>
           </Header>
 
           <Content style={{ padding: 24, background: '#f8f8f7' }}>
+
             {/* KPI strip */}
             <Row gutter={16} style={{ marginBottom: 20 }}>
               {[
-                {
-                  icon: <FireOutlined style={{ color: '#ff4d4f' }} />,
-                  label: 'Active Sales',
-                  value: active.length,
-                  color: '#1d1d1d',
-                },
-                {
-                  icon: <ThunderboltOutlined style={{ color: '#fa8c16' }} />,
-                  label: 'Total Usages',
-                  value: totalOrds.toLocaleString(),
-                  color: '#1d1d1d',
-                  isStr: true,
-                },
-                {
-                  icon: <DollarOutlined style={{ color: '#52c41a' }} />,
-                  label: 'Revenue via Sales',
-                  value: `$${totalRev.toLocaleString()}`,
-                  color: '#52c41a',
-                  isStr: true,
-                },
-                {
-                  icon: <GiftOutlined style={{ color: '#722ed1' }} />,
-                  label: 'Total Campaigns',
-                  value: sales.length,
-                  color: '#1d1d1d',
-                },
-              ].map((s) => (
-                <Col span={6} key={s.label}>
+                { title: 'Total Revenue',    value: shortenVND(totalRevenue) + ' ₫', icon: <DollarOutlined />,      color: '#52c41a', bg: '#f6ffed', change: '+18.4%', up: true  },
+                { title: 'Total Orders',     value: totalOrders.toLocaleString(),    icon: <ShoppingCartOutlined />, color: '#1677ff', bg: '#e6f4ff', change: '+12.1%', up: true  },
+                { title: 'Avg. Order Value', value: shortenVND(avgOrderValue) + ' ₫',icon: <RiseOutlined />,         color: '#fa8c16', bg: '#fff7e6', change: '+5.3%',  up: true  },
+                { title: 'Active Sales',     value: '3',                             icon: <FireOutlined />,         color: '#ff4d4f', bg: '#fff2f0', change: '-1',      up: false },
+              ].map(s => (
+                <Col span={6} key={s.title}>
                   <Card bordered={false} style={{ borderRadius: 10 }}>
-                    <Space direction='vertical' size={4}>
-                      <div style={{ fontSize: 20 }}>{s.icon}</div>
-                      <div
-                        style={{
-                          fontSize: 24,
-                          fontWeight: 700,
-                          color: s.color,
-                        }}
-                      >
-                        {s.value}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>{s.title}</Text>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: '#1d1d1d', lineHeight: 1.1 }}>{s.value}</div>
+                        <Space size={4} style={{ marginTop: 6 }}>
+                          {s.up
+                            ? <ArrowUpOutlined style={{ color: '#52c41a', fontSize: 11 }} />
+                            : <ArrowDownOutlined style={{ color: '#ff4d4f', fontSize: 11 }} />}
+                          <Text style={{ fontSize: 12, color: s.up ? '#52c41a' : '#ff4d4f' }}>{s.change} vs last year</Text>
+                        </Space>
                       </div>
-                      <Text type='secondary' style={{ fontSize: 12 }}>
-                        {s.label}
-                      </Text>
-                    </Space>
+                      <div style={{ width: 44, height: 44, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: s.color }}>
+                        {s.icon}
+                      </div>
+                    </div>
                   </Card>
                 </Col>
               ))}
             </Row>
 
-            {/* Active sales highlight */}
-            {active.length > 0 && (
-              <Card
-                bordered={false}
-                style={{
-                  borderRadius: 10,
-                  marginBottom: 16,
-                  background: '#fffbe6',
-                  border: '1px solid #ffe58f',
-                }}
-              >
-                <Row align='middle' gutter={16}>
-                  <Col>
-                    <FireOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
-                  </Col>
-                  <Col flex='1'>
-                    <Text strong>
-                      {active.length} sale{active.length > 1 ? 's' : ''}{' '}
-                      currently running
-                    </Text>
-                    <div>
-                      <Space size={8} wrap>
-                        {active.map((s) => (
-                          <Tag
-                            key={s.id}
-                            color='orange'
-                            style={{
-                              fontFamily: 'monospace',
-                              letterSpacing: '.04em',
-                            }}
-                          >
-                            {s.code} — {formatDiscount(s)}
-                          </Tag>
-                        ))}
-                      </Space>
-                    </div>
-                  </Col>
-                </Row>
-              </Card>
-            )}
+            {/* Area + Pie */}
+            <Row gutter={16} style={{ marginBottom: 16 }}>
+              <Col span={17}>
+                <Card
+                  bordered={false}
+                  style={{ borderRadius: 10 }}
+                  title={<Text strong>Revenue & Orders</Text>}
+                  extra={
+                    <Select size="small" value={period} onChange={v => setPeriod(v)} style={{ width: 110 }}>
+                      <Select.Option value="monthly">Monthly</Select.Option>
+                      <Select.Option value="weekly">This Week</Select.Option>
+                    </Select>
+                  }
+                >
+                  <Area {...areaConfig} />
+                </Card>
+              </Col>
 
-            {/* Table card */}
-            <Card bordered={false} style={{ borderRadius: 10 }}>
-              {/* Toolbar */}
-              <Row
-                justify='space-between'
-                align='middle'
-                style={{ marginBottom: 16 }}
-              >
-                <Space>
-                  <Segmented
-                    value={statusFilter}
-                    onChange={(v) => setStatus(v as SaleStatus | 'all')}
-                    options={[
-                      { label: 'All', value: 'all' },
-                      {
-                        label: (
-                          <Space size={4}>
-                            <CheckCircleOutlined />
-                            Active
+              <Col span={7}>
+                <Card bordered={false} style={{ borderRadius: 10, height: '100%' }} title={<Text strong>Sales by Category</Text>}>
+                  <Pie {...pieConfig} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
+                    {CATEGORY_PIE.map((c, i) => (
+                      <div key={c.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Space size={6}>
+                          <span style={{ width: 10, height: 10, borderRadius: 2, background: PIE_COLORS[i], display: 'inline-block' }} />
+                          <Text style={{ fontSize: 12 }}>{c.type}</Text>
+                        </Space>
+                        <Text type="secondary" style={{ fontSize: 12 }}>{c.value}%</Text>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Column + Recent orders */}
+            <Row gutter={16} style={{ marginBottom: 16 }}>
+              <Col span={10}>
+                <Card bordered={false} style={{ borderRadius: 10 }} title={<Text strong>Daily Orders — This Week</Text>}>
+                  <Column {...columnConfig} />
+                </Card>
+              </Col>
+
+              <Col span={14}>
+                <Card
+                  bordered={false}
+                  style={{ borderRadius: 10 }}
+                  title={<Text strong>Recent Orders</Text>}
+                  extra={<Text type="secondary" style={{ fontSize: 12, cursor: 'pointer' }}>View all →</Text>}
+                >
+                  <List
+                    dataSource={RECENT_ORDERS}
+                    split={false}
+                    renderItem={(order, i) => (
+                      <List.Item style={{ padding: '8px 0', borderBottom: i < RECENT_ORDERS.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
+                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                          <Space>
+                            <Avatar size={32} style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length], fontSize: 12 }}>
+                              {order.customer.split(' ').map(w => w[0]).slice(-2).join('')}
+                            </Avatar>
+                            <div>
+                              <Text strong style={{ fontSize: 13 }}>{order.customer}</Text>
+                              <div>
+                                <Text type="secondary" style={{ fontSize: 12, fontFamily: 'monospace' }}>{order.id}</Text>
+                                <Text type="secondary" style={{ fontSize: 12 }}> · {order.date}</Text>
+                              </div>
+                            </div>
                           </Space>
-                        ),
-                        value: 'active',
-                      },
-                      {
-                        label: (
-                          <Space size={4}>
-                            <ClockCircleOutlined />
-                            Scheduled
+                          <Space direction="vertical" size={2} style={{ alignItems: 'flex-end' }}>
+                            <Text strong style={{ fontSize: 13 }}>{formatVND(order.amount)}</Text>
+                            <Tag color={ORDER_STATUS_COLOR[order.status]} style={{ fontSize: 11, margin: 0 }}>
+                              {order.status}
+                            </Tag>
                           </Space>
-                        ),
-                        value: 'scheduled',
-                      },
-                      {
-                        label: (
-                          <Space size={4}>
-                            <PauseCircleOutlined />
-                            Paused
-                          </Space>
-                        ),
-                        value: 'paused',
-                      },
-                      {
-                        label: (
-                          <Space size={4}>
-                            <StopOutlined />
-                            Ended
-                          </Space>
-                        ),
-                        value: 'ended',
-                      },
-                    ]}
+                        </Space>
+                      </List.Item>
+                    )}
                   />
-                </Space>
-                <Input
-                  prefix={<SearchOutlined style={{ color: '#ccc' }} />}
-                  placeholder='Search name or code…'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  allowClear
-                  style={{ width: 240 }}
-                  size='small'
-                />
-              </Row>
+                </Card>
+              </Col>
+            </Row>
 
-              <Table
-                columns={columns}
-                dataSource={filtered}
-                rowKey='id'
-                size='middle'
-                pagination={{
-                  pageSize: 8,
-                  showTotal: (t) => `${t} sales`,
-                  showSizeChanger: false,
-                }}
-                locale={{
-                  emptyText: (
-                    <Empty
-                      description={<Text type='secondary'>No sales found</Text>}
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    />
-                  ),
-                }}
-              />
-            </Card>
+            {/* Top products + Low stock */}
+            <Row gutter={16}>
+              <Col span={14}>
+                <Card
+                  bordered={false}
+                  style={{ borderRadius: 10 }}
+                  title={<Text strong>Top Products</Text>}
+                  extra={<Text type="secondary" style={{ fontSize: 12, cursor: 'pointer' }}>View all →</Text>}
+                >
+                  <Table columns={productColumns} dataSource={TOP_PRODUCTS} rowKey="id" pagination={false} size="small" />
+                </Card>
+              </Col>
+
+              <Col span={10}>
+                <Card
+                  bordered={false}
+                  style={{ borderRadius: 10, height: '100%' }}
+                  title={
+                    <Space>
+                      <Text strong>Low Stock Alert</Text>
+                      <Badge count={LOW_STOCK.filter(p => p.stock === 0).length} style={{ backgroundColor: '#ff4d4f' }} />
+                    </Space>
+                  }
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {LOW_STOCK.map(p => (
+                      <div key={p.sku}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                          <Space>
+                            <span style={{ fontSize: 18 }}>{p.emoji}</span>
+                            <div>
+                              <Text style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</Text>
+                              <div><Text type="secondary" style={{ fontSize: 11, fontFamily: 'monospace' }}>{p.sku}</Text></div>
+                            </div>
+                          </Space>
+                          <Text strong style={{ fontSize: 13, color: p.stock === 0 ? '#ff4d4f' : p.stock <= 5 ? '#fa8c16' : '#52c41a' }}>
+                            {p.stock === 0 ? 'Out of stock' : `${p.stock} left`}
+                          </Text>
+                        </div>
+                        <Progress
+                          percent={p.stock === 0 ? 0 : Math.min((p.stock / 50) * 100, 100)}
+                          showInfo={false}
+                          size="small"
+                          strokeColor={p.stock === 0 ? '#ff4d4f' : p.stock <= 5 ? '#fa8c16' : '#52c41a'}
+                          trailColor="#f0f0f0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+
           </Content>
         </Layout>
       </Layout>
-
-      {/* ── Create / Edit Drawer ── */}
-      <Drawer
-        title={
-          <Space>
-            <TagOutlined />
-            {editItem ? 'Edit Sale' : 'Create New Sale'}
-          </Space>
-        }
-        width={520}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        footer={
-          <Space style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-            <Button
-              type='primary'
-              onClick={handleSave}
-              style={{ background: '#1d1d1d', borderColor: '#1d1d1d' }}
-            >
-              {editItem ? 'Save Changes' : 'Create Sale'}
-            </Button>
-          </Space>
-        }
-      >
-        <Form
-          form={form}
-          layout='vertical'
-          initialValues={{ type: 'percentage', appliesTo: 'all' }}
-        >
-          {/* Name + Code */}
-          <Row gutter={12}>
-            <Col span={14}>
-              <Form.Item
-                name='name'
-                label={<Text strong>Sale Name</Text>}
-                rules={[{ required: true, message: 'Required' }]}
-              >
-                <Input placeholder='e.g. Summer Clearance' />
-              </Form.Item>
-            </Col>
-            <Col span={10}>
-              <Form.Item
-                name='code'
-                label={<Text strong>Discount Code</Text>}
-                rules={[{ required: true, message: 'Required' }]}
-              >
-                <Input
-                  placeholder='e.g. SUMMER30'
-                  style={{
-                    fontFamily: 'monospace',
-                    textTransform: 'uppercase',
-                  }}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* Discount type */}
-          <Form.Item name='type' label={<Text strong>Discount Type</Text>}>
-            <Segmented
-              block
-              options={[
-                {
-                  label: (
-                    <Space>
-                      <PercentageOutlined />
-                      Percentage
-                    </Space>
-                  ),
-                  value: 'percentage',
-                },
-                {
-                  label: (
-                    <Space>
-                      <DollarOutlined />
-                      Fixed Amount
-                    </Space>
-                  ),
-                  value: 'fixed',
-                },
-                {
-                  label: (
-                    <Space>
-                      <GiftOutlined />
-                      Buy X Get Y
-                    </Space>
-                  ),
-                  value: 'buy_x_get_y',
-                },
-              ]}
-              onChange={(v) => {
-                setDiscountType(v as DiscountType);
-              }}
-            />
-          </Form.Item>
-
-          {/* Discount value */}
-          <Form.Item shouldUpdate noStyle>
-            {({ getFieldValue }) => {
-              const t = getFieldValue('type') as DiscountType;
-              if (t === 'percentage')
-                return (
-                  <Form.Item
-                    name='value'
-                    label='Discount %'
-                    rules={[{ required: true, message: 'Required' }]}
-                  >
-                    <InputNumber
-                      min={1}
-                      max={100}
-                      suffix='%'
-                      style={{ width: '100%' }}
-                      placeholder='e.g. 30'
-                    />
-                  </Form.Item>
-                );
-              if (t === 'fixed')
-                return (
-                  <Form.Item
-                    name='value'
-                    label='Discount Amount'
-                    rules={[{ required: true, message: 'Required' }]}
-                  >
-                    <InputNumber
-                      min={1}
-                      prefix='$'
-                      style={{ width: '100%' }}
-                      placeholder='e.g. 50'
-                    />
-                  </Form.Item>
-                );
-              return (
-                <Row gutter={12}>
-                  <Col span={12}>
-                    <Form.Item
-                      name='buyX'
-                      label='Buy (quantity)'
-                      rules={[{ required: true }]}
-                    >
-                      <InputNumber
-                        min={1}
-                        style={{ width: '100%' }}
-                        placeholder='2'
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name='getY'
-                      label='Get (quantity free)'
-                      rules={[{ required: true }]}
-                    >
-                      <InputNumber
-                        min={1}
-                        style={{ width: '100%' }}
-                        placeholder='1'
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              );
-            }}
-          </Form.Item>
-
-          <Divider />
-
-          {/* Applies to */}
-          <Form.Item name='appliesTo' label={<Text strong>Applies To</Text>}>
-            <Select
-              onChange={(v: AppliesTo) => {
-                setAppliesTo(v);
-                form.setFieldValue('targets', []);
-              }}
-            >
-              <Select.Option value='all'>All Products</Select.Option>
-              <Select.Option value='categories'>
-                Specific Categories
-              </Select.Option>
-              <Select.Option value='products'>Specific Products</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item shouldUpdate noStyle>
-            {({ getFieldValue }) => {
-              const at = getFieldValue('appliesTo');
-              if (at === 'categories')
-                return (
-                  <Form.Item
-                    name='targets'
-                    label='Categories'
-                    rules={[{ required: true, message: 'Select at least one' }]}
-                  >
-                    <Select mode='multiple' placeholder='Select categories…'>
-                      {ALL_CATEGORIES.map((c) => (
-                        <Select.Option key={c} value={c}>
-                          {c}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                );
-              if (at === 'products')
-                return (
-                  <Form.Item
-                    name='targets'
-                    label='Products'
-                    rules={[{ required: true, message: 'Select at least one' }]}
-                  >
-                    <Select mode='multiple' placeholder='Select products…'>
-                      {ALL_PRODUCTS.map((p) => (
-                        <Select.Option key={p} value={p}>
-                          {p}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                );
-              return null;
-            }}
-          </Form.Item>
-
-          <Divider />
-
-          {/* Date range */}
-          <Form.Item
-            name='dateRange'
-            label={<Text strong>Sale Period</Text>}
-            rules={[{ required: true, message: 'Select date range' }]}
-          >
-            <RangePicker style={{ width: '100%' }} format='DD MMM YYYY' />
-          </Form.Item>
-
-          {/* Min order + usage */}
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name='minOrder' label='Min. Order Value ($)'>
-                <InputNumber
-                  min={0}
-                  prefix='$'
-                  style={{ width: '100%' }}
-                  placeholder='0 = no minimum'
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name='usageLimit' label='Usage Limit'>
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder='Leave empty = unlimited'
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* Live preview */}
-          <Form.Item shouldUpdate noStyle>
-            {({ getFieldValue }) => {
-              const t = getFieldValue('type');
-              const val = getFieldValue('value');
-              const buyX = getFieldValue('buyX');
-              const getY = getFieldValue('getY');
-              const code = getFieldValue('code') || 'YOURCODE';
-              const min = getFieldValue('minOrder');
-              const limit = getFieldValue('usageLimit');
-              let preview = '';
-              if (t === 'percentage' && val) preview = `${val}% off`;
-              else if (t === 'fixed' && val) preview = `$${val} off`;
-              else if (t === 'buy_x_get_y' && buyX && getY)
-                preview = `Buy ${buyX} Get ${getY} Free`;
-              if (!preview) return null;
-              return (
-                <Alert
-                  type='info'
-                  style={{ borderRadius: 8 }}
-                  message={
-                    <Space direction='vertical' size={2}>
-                      <Text
-                        strong
-                        style={{
-                          fontFamily: 'monospace',
-                          fontSize: 14,
-                          letterSpacing: '.06em',
-                        }}
-                      >
-                        {code.toUpperCase()}
-                      </Text>
-                      <Text>
-                        {preview}
-                        {min ? ` on orders over $${min}` : ''}
-                      </Text>
-                      {limit && (
-                        <Text type='secondary' style={{ fontSize: 12 }}>
-                          Limited to {limit} uses
-                        </Text>
-                      )}
-                    </Space>
-                  }
-                />
-              );
-            }}
-          </Form.Item>
-        </Form>
-      </Drawer>
-
-      {/* ── Preview Modal ── */}
-      <Modal
-        open={!!previewItem}
-        onCancel={() => setPreview(null)}
-        footer={
-          <Space>
-            <Button
-              onClick={() => {
-                if (previewItem) {
-                  openEdit(previewItem);
-                  setPreview(null);
-                }
-              }}
-              icon={<EditOutlined />}
-            >
-              Edit
-            </Button>
-            <Button
-              type='primary'
-              onClick={() => setPreview(null)}
-              style={{ background: '#1d1d1d', borderColor: '#1d1d1d' }}
-            >
-              Close
-            </Button>
-          </Space>
-        }
-        title={previewItem?.name}
-        width={480}
-      >
-        {previewItem && (
-          <Space direction='vertical' size={16} style={{ width: '100%' }}>
-            {/* Code badge */}
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '20px',
-                background: '#f8f8f7',
-                borderRadius: 10,
-                border: '2px dashed #e0e0e0',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  letterSpacing: '.2em',
-                  textTransform: 'uppercase',
-                  color: '#aaa',
-                  marginBottom: 8,
-                }}
-              >
-                Discount Code
-              </div>
-              <div
-                style={{
-                  fontSize: 28,
-                  fontWeight: 700,
-                  fontFamily: 'monospace',
-                  letterSpacing: '.1em',
-                  color: '#1d1d1d',
-                }}
-              >
-                {previewItem.code}
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <Tag
-                  style={{
-                    fontSize: 14,
-                    padding: '4px 14px',
-                    color: TYPE_META[previewItem.type].color,
-                    background: `${TYPE_META[previewItem.type].color}18`,
-                    border: `1px solid ${TYPE_META[previewItem.type].color}40`,
-                  }}
-                >
-                  {formatDiscount(previewItem)}
-                </Tag>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <Row gutter={12}>
-              {[
-                { label: 'Usages', value: previewItem.usageCount },
-                {
-                  label: 'Revenue',
-                  value: `$${previewItem.revenue.toLocaleString()}`,
-                },
-                { label: 'Orders', value: previewItem.orders },
-              ].map((s) => (
-                <Col span={8} key={s.label}>
-                  <Card
-                    bordered={false}
-                    style={{
-                      textAlign: 'center',
-                      background: '#fafafa',
-                      borderRadius: 8,
-                    }}
-                  >
-                    <div style={{ fontSize: 20, fontWeight: 700 }}>
-                      {s.value}
-                    </div>
-                    <Text type='secondary' style={{ fontSize: 12 }}>
-                      {s.label}
-                    </Text>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-
-            {/* Details */}
-            <table
-              style={{
-                width: '100%',
-                fontSize: 13,
-                borderCollapse: 'collapse',
-              }}
-            >
-              {[
-                [
-                  'Status',
-                  <Badge
-                    status={STATUS_META[computeStatus(previewItem)].badge}
-                    text={STATUS_META[computeStatus(previewItem)].label}
-                  />,
-                ],
-                ['Period', `${previewItem.startDate} → ${previewItem.endDate}`],
-                [
-                  'Applies To',
-                  previewItem.appliesTo === 'all'
-                    ? 'All Products'
-                    : previewItem.targets.join(', '),
-                ],
-                [
-                  'Min. Order',
-                  previewItem.minOrder > 0
-                    ? `$${previewItem.minOrder}`
-                    : 'No minimum',
-                ],
-                [
-                  'Usage Limit',
-                  previewItem.usageLimit
-                    ? `${previewItem.usageCount} / ${previewItem.usageLimit}`
-                    : 'Unlimited',
-                ],
-              ].map(([k, v]) => (
-                <tr
-                  key={k as string}
-                  style={{ borderBottom: '1px solid #f5f5f5' }}
-                >
-                  <td style={{ padding: '8px 0', color: '#888', width: '38%' }}>
-                    {k}
-                  </td>
-                  <td style={{ padding: '8px 0', fontWeight: 500 }}>{v}</td>
-                </tr>
-              ))}
-            </table>
-          </Space>
-        )}
-      </Modal>
     </ConfigProvider>
   );
-}
+};

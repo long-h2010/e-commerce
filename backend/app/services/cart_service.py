@@ -1,11 +1,12 @@
-from typing import Any
+from typing import Any, List
 from uuid import UUID
 
 from app.repositories.cart_repository import CartRepository
 from app.services.base_service import BaseService
 from app.services.cart_item_service import CartItemService
 from app.schemas.cart_item_schema import CreateCartItem, DeleteCartItem, FindCartItem
-from app.schemas.cart_schema import AddItem, CartRespones, CreateCart, UpdateQuantity
+from app.schemas.cart_schema import AddItem, CreateCart, UpdateQuantity
+from app.schemas.product_variant_schema import VariantDetailResponse
 
 
 class CartService(BaseService):
@@ -28,8 +29,9 @@ class CartService(BaseService):
 
         return cart
 
-    async def get_list_item(self, user_id: UUID, find_schema: Any):
+    async def get_list_item(self, user_id: UUID, find_schema: FindCartItem):
         cart = self.get_cart_by_user(user_id)
+        find_schema.limit = 0
         items = self._item_service.get_list(
             FindCartItem(cart_id=cart.id, **find_schema.model_dump())
         )
@@ -38,7 +40,7 @@ class CartService(BaseService):
 
         results = []
         for item in items["founds"]:
-            cart_item = CartRespones.model_validate(item)
+            cart_item = VariantDetailResponse.model_validate(item)
             product = item.variant.product
 
             discount_info = self._discount_service.apply_discount(
@@ -75,6 +77,16 @@ class CartService(BaseService):
         )["founds"][0]
 
         return self._item_service.update(item.id, update_schema)
-    
+
     def delete_item_by_id(self, id):
         return self._item_service.delete_by_id(id)
+
+    def delete_by_options(self, user_id: UUID, items: List[UUID]):
+        cart = self.get_cart_by_user(user_id)
+
+        return self._item_service.delete_by_options(
+            cart_id=cart.id,
+            variant_id__in=items,
+            allow_multiple=True,
+            commit=True,
+        )

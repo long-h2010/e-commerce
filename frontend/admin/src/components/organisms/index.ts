@@ -9,3 +9,7 @@ export * from './ProductFooter';
 export * from './AddVariantDrawer';
 export * from './AddCategoryDrawer';
 export * from './AddDiscountDrawer';
+export * from './OrderItemList';
+export * from './OrderInfor';
+export * from './ShippingAdress';
+export * from './OrderActions';

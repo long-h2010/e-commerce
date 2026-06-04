@@ -8,86 +8,31 @@ import {
   ProductList,
 } from '@/components/organisms';
 import { MainTemplate } from '@/components/templates';
-import { authService } from '@/services';
-import { useAuthStore } from '@/stores';
-import { Category, ProductBase } from '@/types';
-import { useEffect } from 'react';
-
-const categories: Category[] = [
-  { id: '123123', category: 'men', totalProducts: 256 },
-  { id: '464566', category: 'women', totalProducts: 256 },
-  { id: '234673', category: 'accessories', totalProducts: 256 },
-];
-
-const products: ProductBase[] = [
-  {
-    id: '12312',
-    name: 'T-shirt Y2K',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    badge: 'New',
-    saleValue: 1000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-  {
-    id: '234234',
-    name: 'T-shirt',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    badge: 'New',
-    saleValue: 1000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-  {
-    id: '67233',
-    name: 'T-shirt',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    badge: 'New',
-    saleValue: 1000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-  {
-    id: '23425',
-    name: 'T-shirt',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    saleValue: 1000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-  {
-    id: '234',
-    name: 'T-shirt',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    saleValue: 1000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-  {
-    id: '62135',
-    name: 'T-shirt',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-  {
-    id: '52423',
-    name: 'T-shirt',
-    thumbnail: '/images/categories/men.png',
-    price: 10000,
-    avgRating: 2,
-    purchases: 12365,
-  },
-];
+import { useList } from '@/hooks';
+import { CategorySummary, ProductBase } from '@/types';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
-  
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [products, setProducts] = useState<ProductBase[]>([]);
+  const { data: categoriesData } = useList({
+    resource: process.env.NEXT_PUBLIC_CATEGORIES_ENDPOINT!,
+  });
+  const { data: productsData } = useList({
+    resource: process.env.NEXT_PUBLIC_PRODUCTS_ENDPOINT!,
+  });
+
+  useEffect(
+    () =>
+      setCategories(
+        categoriesData?.data.filter((cat: any) => cat.level === 'root') || [],
+      ),
+    [categoriesData],
+  );
+
+  useEffect(() => {
+    setProducts(productsData?.data || []);
+  }, [productsData]);
 
   return (
     <MainTemplate>
